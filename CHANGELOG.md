@@ -1,50 +1,72 @@
-Changelog
+# Changelog
+
 All notable changes to this project will be documented in this file.
 
-0.1 - 2026-03-07
-Added
-Initial project setup from scratch
-Project structure created:
-/backend - Spring Boot application
-/frontend - React application
-/mobile - Android app (placeholder)
-/docs - Documentation files
-Backend:
-Spring Boot project generated from start.spring.io
-Configured MySQL database connection
-Added project dependencies (Spring Web, Security, JPA, MySQL, Lombok, Validation)
-Created User entity and repository
-Implemented JWT authentication from scratch
-Created AuthController with login/register endpoints
-Added password encryption with BCrypt
-Configured CORS for frontend access
-Created all 11 database entities based on ERD design
-Established JPA relationships (OneToOne, OneToMany, ManyToOne)
-Frontend:
-React app created with create-react-app
-Installed dependencies (axios, react-router-dom, tailwindcss)
-Configured Tailwind CSS for styling
-Created folder structure (components, pages, services)
-Built responsive Navbar component
-Built Footer component
-Created Home page with hero section
-Created Login page with role-based tabs (Sender/Rider)
-Created Register page with conditional vehicle field for riders
-Created Sender Dashboard with stats cards
-Created Profile page
-Implemented API service layer with axios
-Connected frontend to backend API
-Added protected routes with authentication
-Documentation:
-Created README.md with project overview
-Created TASK_CHECKLIST.md with 167 tasks
-Created CHANGELOG.md for version tracking
-Added .gitignore for all environments
-Added Software Design Document (SDD) to /docs
-Added ERD diagram to /docs
-Added API specifications to /docs
-Added UI/UX wireframes to /docs
-Changed
-N/A (initial release)
-Fixed
-N/A (initial release)
+## [0.2] - 2026-03-07
+### Added
+- **Phase 1 Completion - User Registration and Login**
+- Complete authentication system implemented from scratch
+
+### Backend
+- Spring Boot project initialized with Spring Security, JPA, MySQL
+- JWT authentication with token generation and validation
+- User registration endpoint (`POST /api/auth/register`)
+- User login endpoint (`POST /api/auth/login`)
+- Current user endpoint (`GET /api/auth/me`)
+- Password encryption with BCrypt (12 salt rounds)
+- Duplicate email validation preventing multiple registrations
+- User entity with fields: id, email, password_hash, first_name, last_name, phone, user_type
+- MySQL database integration with proper schema
+- CORS configuration for frontend access
+- Global exception handling for auth errors
+
+### Frontend
+- React application created with create-react-app
+- Tailwind CSS configured for styling
+- React Router setup with protected routes
+- Login page with role tabs (Sender/Rider)
+- Registration page with conditional vehicle fields for riders
+- Form validation for all inputs
+- Axios integration with backend API
+- JWT token storage in localStorage
+- Dashboard redirect after successful login
+- Responsive design matching SDD wireframes
+
+### Documentation
+- Software Design Document (SDD) completed
+- README.md with setup instructions
+- TASK_CHECKLIST.md with 211 tasks
+- CHANGELOG.md for version tracking
+- .gitignore configured for all environments
+
+### GitHub Repository
+- Repository: IT342-Lariosa-QuickParcel
+- Initial code push with complete backend and frontend
+- Branch structure cleaned up with main as default
+
+## [0.1] - 2026-03-07
+### Added
+- Initial project structure
+- Backend and frontend setup
+- Basic dependencies installed
+- Project documentation templates
+
+---
+
+## Commit History for Phase 1
+- `IT342 Phase 1 – User Registration and Login Completed`
+- Full commit hash: [Insert your commit hash here]
+
+---
+
+**Project Status:** ✅ Phase 1 Complete - Authentication System Working
+- ✅ User registration with validation
+- ✅ User login with JWT
+- ✅ Database storage with password encryption
+- ✅ React frontend with matching SDD design
+- ✅ Full integration between frontend and backend
+
+---
+
+[0.2]: https://github.com/allenlariosa2790-dotcom/IT342-Lariosa-QuickParcel/releases/tag/v0.2
+[0.1]: https://github.com/allenlariosa2790-dotcom/IT342-Lariosa-QuickParcel/releases/tag/v0.1

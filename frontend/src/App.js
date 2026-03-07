@@ -8,6 +8,8 @@ import RiderDashboard from './pages/RiderDashboard';
 import CreateDelivery from './pages/CreateDelivery';
 import MyDeliveries from './pages/MyDeliveries';
 import Profile from './pages/Profile';
+import AvailableDeliveries from './pages/AvailableDeliveries';
+import Earnings from './pages/Earnings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -61,8 +63,24 @@ function App() {
         <Route
           path="/my-deliveries"
           element={
-            <ProtectedRoute allowedRoles={['SENDER']}>
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
               <MyDeliveries />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/available-deliveries"
+          element={
+            <ProtectedRoute allowedRoles={['RIDER']}>
+              <AvailableDeliveries />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/earnings"
+          element={
+            <ProtectedRoute allowedRoles={['RIDER']}>
+              <Earnings />
             </ProtectedRoute>
           }
         />

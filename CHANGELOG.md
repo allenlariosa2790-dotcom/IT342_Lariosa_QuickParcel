@@ -21,15 +21,19 @@ All notable changes to this project will be documented in this file.
 - Global exception handling for auth errors
 
 ### Frontend
-- React application created with create-react-app
-- Tailwind CSS configured for styling
-- React Router setup with protected routes
+- React application with Tailwind CSS
 - Login page with role tabs (Sender/Rider)
 - Registration page with conditional vehicle fields for riders
+- Success message popup on successful login
 - Form validation for all inputs
 - Axios integration with backend API
 - JWT token storage in localStorage
-- Dashboard redirect after successful login
+- Protected routes with role-based access
+- Sender Dashboard with stats cards
+- Rider Dashboard with available deliveries
+- Available Deliveries page for riders
+- Earnings page with transaction history
+- Profile page displaying user info
 - Responsive design matching SDD wireframes
 
 ### Documentation

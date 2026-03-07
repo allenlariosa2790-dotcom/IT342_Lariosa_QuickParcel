@@ -10,11 +10,13 @@ const Login = () => {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
@@ -27,16 +29,18 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(response));
 
       // Show success message
-      setError(''); // Clear any errors
+      setSuccess('Login successful! Redirecting...');
 
-      // Redirect based on user role
-      if (response.userType === 'SENDER') {
-        navigate('/sender-dashboard');
-      } else if (response.userType === 'RIDER') {
-        navigate('/rider-dashboard');
-      } else {
-        navigate('/admin-dashboard');
-      }
+      // Redirect based on user role after 1.5 seconds
+      setTimeout(() => {
+        if (response.userType === 'SENDER') {
+          navigate('/sender-dashboard');
+        } else if (response.userType === 'RIDER') {
+          navigate('/rider-dashboard');
+        } else {
+          navigate('/admin-dashboard');
+        }
+      }, 1500);
     } catch (err) {
       console.error('Login error:', err);
       setError(err.response?.data?.message || 'Invalid email or password');
@@ -55,6 +59,13 @@ const Login = () => {
             <p className="text-gray-600 mt-2">Log in to your account</p>
           </div>
 
+          {/* Success Message */}
+          {success && (
+            <div className="mb-4 p-3 bg-green-500 text-white rounded-lg animate-pulse">
+              {success}
+            </div>
+          )}
+
           {/* Role Tabs */}
           <div className="flex gap-4 mb-8 border-b border-gray-200 pb-4">
             <button
@@ -65,6 +76,7 @@ const Login = () => {
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
               type="button"
+              disabled={loading || success}
             >
               Sender
             </button>
@@ -76,6 +88,7 @@ const Login = () => {
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
               type="button"
+              disabled={loading || success}
             >
               Rider
             </button>
@@ -97,7 +110,7 @@ const Login = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition-all"
                 placeholder="john@example.com"
                 required
-                disabled={loading}
+                disabled={loading || success}
               />
             </div>
 
@@ -110,7 +123,7 @@ const Login = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition-all"
                 placeholder="••••••••"
                 required
-                disabled={loading}
+                disabled={loading || success}
               />
             </div>
 
@@ -121,7 +134,7 @@ const Login = () => {
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
                   className="rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]"
-                  disabled={loading}
+                  disabled={loading || success}
                 />
                 <span className="ml-2 text-gray-600">Remember me</span>
               </label>
@@ -133,9 +146,9 @@ const Login = () => {
             <button
               type="submit"
               className="w-full bg-[#2563EB] text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
+              disabled={loading || success}
             >
-              {loading ? 'Logging in...' : 'Log In'}
+              {loading ? 'Logging in...' : success ? 'Redirecting...' : 'Log In'}
             </button>
 
             <p className="text-center mt-6 text-gray-600">

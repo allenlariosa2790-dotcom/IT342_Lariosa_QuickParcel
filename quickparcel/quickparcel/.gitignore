@@ -1,0 +1,73 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# IntelliJ IDEA - Comprehensive
+.idea/
+.idea/**/*
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/libraries/**/*
+.idea/caches
+.idea/caches/**/*
+.idea/modules.xml
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea/navEditor.xml
+.idea/deploymentTargetDropDown.xml
+.idea/runConfigurations.xml
+.idea/other.xml
+.idea/shelf/
+.idea/shelf/**/*
+.idea/dataSources/
+.idea/dataSources/**/*
+.idea/sqlDataSources/
+.idea/sqlDataSources/**/*
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+.idea/encodings.xml
+.idea/vcs.xml
+
+# Maven target folders
+**/target/
+**/target/**

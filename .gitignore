@@ -1,0 +1,451 @@
+# ======================================================
+# QUICKPARCEL - GITIGNORE
+# Created: March 7, 2026
+# Project: IT342-Lariosa-QuickParcel
+# ======================================================
+
+# ======================================================
+# IDE FILES
+# ======================================================
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+.idea_modules/
+.classpath
+.project
+.settings/
+bin/
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### VS Code ###
+.vscode/
+*.code-workspace
+.history/
+*.sublime-*
+
+### Eclipse ###
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
+.springBeans
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+nbactions.xml
+nb-configuration.xml
+
+### STS ###
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+
+# ======================================================
+# BACKEND (Spring Boot)
+# ======================================================
+
+### Compiled files ###
+*.class
+*.jar
+*.war
+*.ear
+*.log
+*.log.*
+logs/
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+### Application Properties (Sensitive Data) ###
+**/application-local.properties
+**/application-dev.properties
+**/application-prod.properties
+**/application-secret.properties
+**/application-*.properties
+!**/application.properties.example
+!**/application-home.properties.example
+!**/application-lab.properties.example
+
+### Uploaded Files ###
+uploads/
+uploads/*
+!uploads/.gitkeep
+
+### Test Reports ###
+test-output/
+*.test
+*.results
+surefire-reports/
+jacoco.exec
+
+# ======================================================
+# FRONTEND (React)
+# ======================================================
+
+### Dependencies ###
+frontend/node_modules/
+frontend/node_modules/*
+!frontend/node_modules/.gitkeep
+
+### Build Output ###
+frontend/build/
+frontend/dist/
+frontend/out/
+frontend/*.js.map
+frontend/*.css.map
+frontend/*.ts.map
+
+### Environment Variables ###
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.env.*.local
+
+### Debug Logs ###
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+
+### Runtime Data ###
+frontend/pids
+frontend/*.pid
+frontend/*.seed
+frontend/*.pid.lock
+
+### Coverage ###
+frontend/coverage/
+frontend/.nyc_output/
+
+### Misc ###
+frontend/.cache/
+frontend/.temp/
+frontend/.tmp/
+frontend/.rollup.cache/
+
+# ======================================================
+# MOBILE (Android/Kotlin)
+# ======================================================
+
+### Android ###
+mobile/*.apk
+mobile/*.aab
+mobile/*.dex
+mobile/*.class
+mobile/bin/
+mobile/gen/
+mobile/out/
+mobile/release/
+mobile/*.log
+mobile/local.properties
+mobile/.gradle/
+mobile/build/
+mobile/captures/
+mobile/.cxx/
+mobile/*.iml
+mobile/.idea/
+mobile/.idea/workspace.xml
+mobile/.idea/tasks.xml
+mobile/.idea/gradle.xml
+mobile/.idea/assetWizardSettings.xml
+mobile/.idea/dictionaries
+mobile/.idea/libraries
+mobile/.idea/caches
+mobile/.idea/modules.xml
+mobile/.idea/compiler.xml
+mobile/.idea/jarRepositories.xml
+mobile/.idea/misc.xml
+mobile/.idea/navEditor.xml
+mobile/.idea/deploymentTargetDropDown.xml
+mobile/.idea/runConfigurations.xml
+mobile/.idea/other.xml
+
+### Gradle ###
+mobile/gradle/
+mobile/gradle/wrapper/
+mobile/gradlew
+mobile/gradlew.bat
+mobile/gradle.properties
+!**/gradle-wrapper.jar
+
+### Fastlane ###
+mobile/fastlane/report.xml
+mobile/fastlane/Preview.html
+mobile/fastlane/screenshots
+mobile/fastlane/test_output
+mobile/fastlane/readme.md
+
+### Keystore Files ###
+mobile/*.jks
+mobile/*.keystore
+mobile/*.keystore.*
+mobile/*.p12
+mobile/*.p8
+mobile/*.key
+mobile/*.crt
+mobile/*.cer
+
+# ======================================================
+# DOCUMENTATION
+# ======================================================
+
+### Temporary Docs ###
+docs/temp/
+docs/tmp/
+docs/*.tmp
+docs/*.bak
+docs/*.swp
+
+### Generated PDFs (if not committed) ###
+docs/*.pdf
+!docs/SDD_*.pdf
+
+# ======================================================
+# OPERATING SYSTEM FILES
+# ======================================================
+
+### macOS ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.Trashes-*/
+
+### Windows ###
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+*.dll.bak
+
+### Linux ###
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ======================================================
+# ENVIRONMENT VARIABLES
+# ======================================================
+
+### General Environment Files ###
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+.env.staging
+*.pem
+*.p12
+*.key
+*.crt
+*.keystore
+secrets.*
+config/secrets.yml
+
+### Docker ###
+docker-compose.override.yml
+Dockerfile.local
+*.db
+*.bak
+*.data
+*.pid
+*.seed
+*.pid.lock
+
+# ======================================================
+# TEMPORARY FILES
+# ======================================================
+
+### Temp Files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+~*
+*.log
+*.cache
+*.bak
+*.backup
+*.orig
+
+### Package Manager Caches ###
+.npm/
+.yarn/
+.pnpm/
+.gradle/
+.m2/repository/
+
+# ======================================================
+# MISCELLANEOUS
+# ======================================================
+
+### Logs ###
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+### Diagnostic reports ###
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+### Runtime data ###
+*.pid
+*.seed
+*.pid.lock
+
+### Directory for instrumented libs generated by jscoverage/JSCover ###
+lib-cov/
+
+### Coverage directory used by tools like istanbul ###
+coverage/
+*.lcov
+
+### nyc test coverage ###
+.nyc_output/
+
+### Grunt intermediate storage ###
+.grunt/
+
+### Bower dependency directory ###
+bower_components/
+
+### node-waf configuration ###
+.lock-wscript
+
+### Compiled binary addons ###
+build/Release/
+
+### Dependency directories ###
+jspm_packages/
+
+### TypeScript cache ###
+*.tsbuildinfo
+
+### Optional npm cache directory ###
+.npm/
+
+### Optional eslint cache ###
+.eslintcache
+
+### Optional stylelint cache ###
+.stylelintcache
+
+### Microbundle cache ###
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+### Optional REPL history ###
+.node_repl_history
+
+### Output of 'npm pack' ###
+*.tgz
+
+### Yarn Integrity file ###
+.yarn-integrity
+
+### dotenv environment variable files ###
+.env.test
+.env.production
+.env.local
+.env.*.local
+
+### parcel-bundler cache ###
+.parcel-cache/
+
+### Next.js build output ###
+.next/
+out/
+
+### Nuxt.js build output ###
+.nuxt/
+dist/
+
+### Gatsby files ###
+.cache/
+public/
+
+### vuepress build output ###
+.vuepress/dist/
+
+### Serverless directories ###
+.serverless/
+
+### FuseBox cache ###
+.fusebox/
+
+### DynamoDB Local files ###
+.dynamodb/
+
+### TernJS port file ###
+.tern-port
+
+### Stores ###
+app*.log
+store*.log
+
+# ======================================================
+# KEEP THESE FILES
+# ======================================================
+
+!.gitignore
+!.gitkeep
+!**/.gitkeep
+!README.md
+!CHANGELOG.md
+!TASK_CHECKLIST.md
+!**/application.properties.example
+!**/application-*.properties.example
+!**/.env.example
+
+# ======================================================
+# END OF .GITIGNORE
+# ======================================================

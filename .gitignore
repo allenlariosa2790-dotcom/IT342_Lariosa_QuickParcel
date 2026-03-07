@@ -446,6 +446,8 @@ store*.log
 !**/application-*.properties.example
 !**/.env.example
 
+# Ignore empty/incorrect backend folder
+backend/
 # ======================================================
 # END OF .GITIGNORE
 # ======================================================

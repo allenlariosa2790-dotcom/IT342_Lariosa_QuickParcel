@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3] - 2026-03-28
+### Added
+- **Complete Backend Delivery Management System**
+    - Created all 11 entities based on ERD (User, Sender, Rider, Admin, Parcel, Delivery, Vehicle, TrackingHistory, Payment, File, RefreshToken)
+    - Created corresponding repositories for all entities
+    - Established proper JPA relationships (OneToOne, OneToMany, ManyToOne)
+
+- **Delivery Service & Controller**
+    - Created DeliveryService with business logic:
+        - Create delivery with auto-generated tracking number
+        - Accept delivery by rider
+        - Update delivery status with location tracking
+        - Cancel delivery
+        - Get tracking history
+    - Implemented DeliveryController with REST endpoints
+    - Added automatic tracking history recording on every status change
+
+### API Endpoints Added
+- `POST /api/deliveries` - Create new delivery request
+- `GET /api/deliveries/available` - Get available deliveries for riders
+- `GET /api/deliveries/my` - Get current user's deliveries
+- `PUT /api/deliveries/{id}/accept` - Accept delivery (rider only)
+- `PUT /api/deliveries/{id}/status` - Update delivery status with location
+- `GET /api/deliveries/{id}/track` - Get full tracking history
+- `PUT /api/deliveries/{id}/cancel` - Cancel delivery
+
+### Technical Improvements
+- Tracking number format: `QP-timestamp` (e.g., QP-1743161234567)
+- Status workflow: PENDING → ACCEPTED → PICKED_UP → IN_TRANSIT → DELIVERED → CANCELLED
+- Automatic timestamp recording for pickup and delivery events
+- Location tracking for each status update
+
+---
 ## [0.2] - 2026-03-07
 ### Added
 - **Phase 1 Completion - User Registration and Login**
@@ -59,7 +92,7 @@ All notable changes to this project will be documented in this file.
 
 ## Commit History for Phase 1
 - `IT342 Phase 1 – User Registration and Login Completed`
-- Full commit hash: [Insert your commit hash here]
+- Full commit hash: 8277bcb
 
 ---
 
@@ -72,5 +105,6 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+[0.3]: https://github.com/allenlariosa2790-dotcom/IT342-Lariosa-QuickParcel/releases/tag/v0.3
 [0.2]: https://github.com/allenlariosa2790-dotcom/IT342-Lariosa-QuickParcel/releases/tag/v0.2
 [0.1]: https://github.com/allenlariosa2790-dotcom/IT342-Lariosa-QuickParcel/releases/tag/v0.1

@@ -185,14 +185,17 @@ mobile/.idea/navEditor.xml
 mobile/.idea/deploymentTargetDropDown.xml
 mobile/.idea/runConfigurations.xml
 mobile/.idea/other.xml
+mobile/.idea/resourceCache/
+mobile/.kotlin/
 
 ### Gradle ###
 mobile/gradle/
 mobile/gradle/wrapper/
 mobile/gradlew
 mobile/gradlew.bat
-mobile/gradle.properties
 !**/gradle-wrapper.jar
+mobile/gradle.properties
+mobile/buildScan/
 
 ### Fastlane ###
 mobile/fastlane/report.xml
@@ -210,6 +213,17 @@ mobile/*.p8
 mobile/*.key
 mobile/*.crt
 mobile/*.cer
+
+### Build Output ###
+mobile/app/build/
+mobile/app/build/intermediates/
+mobile/app/build/outputs/
+mobile/app/build/tmp/
+mobile/app/.cxx/
+
+### Kotlin ###
+kotlin-js-store/
+.kotlin/
 
 # ======================================================
 # DOCUMENTATION

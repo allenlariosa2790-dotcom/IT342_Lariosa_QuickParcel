@@ -1,12 +1,10 @@
 package edu.cit.lariosa.quickparcel.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "deliveries")
-@Data
 public class Delivery {
 
     @Id
@@ -55,7 +53,7 @@ public class Delivery {
     private Double actualCost;
 
     @Column(nullable = false)
-    private String status; // PENDING, ACCEPTED, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED
+    private String status;
 
     @Column(name = "scheduled_time")
     private LocalDateTime scheduledTime;
@@ -86,4 +84,68 @@ public class Delivery {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getTrackingNumber() { return trackingNumber; }
+    public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
+
+    public Sender getSender() { return sender; }
+    public void setSender(Sender sender) { this.sender = sender; }
+
+    public Rider getRider() { return rider; }
+    public void setRider(Rider rider) { this.rider = rider; }
+
+    public Parcel getParcel() { return parcel; }
+    public void setParcel(Parcel parcel) { this.parcel = parcel; }
+
+    public String getPickupAddress() { return pickupAddress; }
+    public void setPickupAddress(String pickupAddress) { this.pickupAddress = pickupAddress; }
+
+    public String getDropoffAddress() { return dropoffAddress; }
+    public void setDropoffAddress(String dropoffAddress) { this.dropoffAddress = dropoffAddress; }
+
+    public Double getPickupLatitude() { return pickupLatitude; }
+    public void setPickupLatitude(Double pickupLatitude) { this.pickupLatitude = pickupLatitude; }
+
+    public Double getPickupLongitude() { return pickupLongitude; }
+    public void setPickupLongitude(Double pickupLongitude) { this.pickupLongitude = pickupLongitude; }
+
+    public Double getDropoffLatitude() { return dropoffLatitude; }
+    public void setDropoffLatitude(Double dropoffLatitude) { this.dropoffLatitude = dropoffLatitude; }
+
+    public Double getDropoffLongitude() { return dropoffLongitude; }
+    public void setDropoffLongitude(Double dropoffLongitude) { this.dropoffLongitude = dropoffLongitude; }
+
+    public Double getDistance() { return distance; }
+    public void setDistance(Double distance) { this.distance = distance; }
+
+    public Double getEstimatedCost() { return estimatedCost; }
+    public void setEstimatedCost(Double estimatedCost) { this.estimatedCost = estimatedCost; }
+
+    public Double getActualCost() { return actualCost; }
+    public void setActualCost(Double actualCost) { this.actualCost = actualCost; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getScheduledTime() { return scheduledTime; }
+    public void setScheduledTime(LocalDateTime scheduledTime) { this.scheduledTime = scheduledTime; }
+
+    public LocalDateTime getPickedUpTime() { return pickedUpTime; }
+    public void setPickedUpTime(LocalDateTime pickedUpTime) { this.pickedUpTime = pickedUpTime; }
+
+    public LocalDateTime getDeliveredTime() { return deliveredTime; }
+    public void setDeliveredTime(LocalDateTime deliveredTime) { this.deliveredTime = deliveredTime; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

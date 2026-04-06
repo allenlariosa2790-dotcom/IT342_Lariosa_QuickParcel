@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Simple white circle background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,20 L160,50 L160,150 L100,180 L40,150 L40,50 L100,20 Z"/>
+
+    <!-- Blue inner shape -->
+    <path
+        android:fillColor="#2563EB"
+        android:pathData="M100,40 L145,62 L145,138 L100,160 L55,138 L55,62 L100,40 Z"/>
+
+    <!-- Simple Q shape made of rectangles -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M85,95 L115,95 L115,105 L85,105 Z"/>
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M85,80 L115,80 L115,90 L85,90 Z"/>
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M95,100 L105,100 L105,120 L95,120 Z"/>
+
+</vector>

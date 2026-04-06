@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F3F4F6">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottomNav">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Blue Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#2563EB"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="52dp"
+                android:paddingBottom="24dp">
+
+                <!-- Welcome row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Welcome back," android:textSize="14sp" android:textColor="#BFDBFE"/>
+                        <TextView android:id="@+id/tvWelcome" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Michael!" android:textSize="24sp" android:textStyle="bold" android:textColor="#FFFFFF"/>
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:id="@+id/btnNotification"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_bell_circle">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_gravity="center" android:src="@drawable/ic_bell" android:contentDescription="Notifications"/>
+                    </FrameLayout>
+
+                </LinearLayout>
+
+                <!-- Earnings card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="#1D4ED8"
+                    android:padding="16dp"
+                    android:layout_marginTop="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today's Earnings" android:textSize="12sp" android:textColor="#BFDBFE"/>
+                            <TextView android:id="@+id/tvTodayEarnings" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$42" android:textSize="30sp" android:textStyle="bold" android:textColor="#FFFFFF"/>
+                        </LinearLayout>
+
+                        <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="#2563EB">
+                            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center" android:src="@drawable/ic_nav_earnings" android:contentDescription="Earnings trend"/>
+                        </FrameLayout>
+
+                    </LinearLayout>
+
+                    <!-- Real earnings bar chart -->
+                    <com.github.mikephil.charting.charts.BarChart
+                        android:id="@+id/barChartEarnings"
+                        android:layout_width="match_parent"
+                        android:layout_height="80dp"
+                        android:layout_marginTop="12dp"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Map placeholder -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_stats_card">
+
+                <TextView
+                    android:id="@+id/tvNearbyCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="12dp"
+                    android:layout_gravity="top|start"
+                    android:text="3 Deliveries Nearby"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#111827"
+                    android:background="#FFFFFF"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"/>
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_nav_profile"
+                    android:contentDescription="Map pin"/>
+
+            </FrameLayout>
+
+            <!-- Stats Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="4dp"
+                android:weightSum="3">
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="80dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/bg_stats_card" android:layout_marginEnd="6dp">
+                    <TextView android:id="@+id/tvAvailableCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="3" android:textSize="26sp" android:textStyle="bold" android:textColor="#2563EB"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Available" android:textSize="12sp" android:textColor="#6B7280"/>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="80dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/bg_stats_card" android:layout_marginStart="6dp" android:layout_marginEnd="6dp">
+                    <TextView android:id="@+id/tvCompletedCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2" android:textSize="26sp" android:textStyle="bold" android:textColor="#10B981"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Completed" android:textSize="12sp" android:textColor="#6B7280"/>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="80dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/bg_stats_card" android:layout_marginStart="6dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:id="@+id/tvRating" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="4.8" android:textSize="26sp" android:textStyle="bold" android:textColor="#111827"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" ★" android:textSize="20sp" android:textColor="#F59E0B"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rating" android:textSize="12sp" android:textColor="#6B7280"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Available Deliveries header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="10dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Available Deliveries" android:textSize="17sp" android:textStyle="bold" android:textColor="#111827"/>
+                <TextView android:id="@+id/tvViewAll" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="View All" android:textSize="13sp" android:textColor="#2563EB" android:textStyle="bold"/>
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvAvailableDeliveries"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="16dp"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"/>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Navigation -->
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#FFFFFF"
+        android:elevation="12dp"
+        android:weightSum="4">
+
+        <LinearLayout android:id="@+id/navHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="8dp">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_home_active" android:contentDescription="Home"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Home" android:textSize="11sp" android:textColor="#2563EB" android:layout_marginTop="2dp"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/navDeliveries" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="8dp">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_deliveries" android:contentDescription="Deliveries"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Deliveries" android:textSize="11sp" android:textColor="#9CA3AF" android:layout_marginTop="2dp"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/navEarnings" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="8dp">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_earnings" android:contentDescription="Earnings"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Earnings" android:textSize="11sp" android:textColor="#9CA3AF" android:layout_marginTop="2dp"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/navProfile" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="8dp">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_profile" android:contentDescription="Profile"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Profile" android:textSize="11sp" android:textColor="#9CA3AF" android:layout_marginTop="2dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

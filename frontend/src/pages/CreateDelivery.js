@@ -102,6 +102,8 @@ const CreateDelivery = () => {
       dropoffLatitude: dropoff.lat,
       dropoffLongitude: dropoff.lng,
       notes: notes,
+      paymentMethod: paymentMethod,
+      paymentStatus: 'PENDING',
       scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : null,
     };
 
@@ -300,16 +302,16 @@ const CreateDelivery = () => {
                     <label className="block text-gray-700 font-medium mb-2">Payment Method *</label>
                     <div className="flex gap-4">
                       <label className="flex items-center">
-                        <input type="radio" value="paypal" checked={paymentMethod === 'paypal'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
+                        <input type="radio" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
+                        Cash on Delivery
+                      </label>
+                      <label className="flex items-center">
+                        <input type="radio" value="paypal (coming soon)" checked={paymentMethod === 'paypal'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
                         PayPal
                       </label>
                       <label className="flex items-center">
-                        <input type="radio" value="gcash" checked={paymentMethod === 'gcash'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
+                        <input type="radio" value="GCash (coming soon)" checked={paymentMethod === 'gcash'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
                         GCash
-                      </label>
-                      <label className="flex items-center">
-                        <input type="radio" value="card" checked={paymentMethod === 'card'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
-                        Credit Card
                       </label>
                     </div>
                   </div>

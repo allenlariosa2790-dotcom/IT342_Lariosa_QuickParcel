@@ -32,7 +32,15 @@ public class DeliveryService {
     @Autowired
     private DistanceService distanceService;
 
-    // ========== NEW METHOD for creating delivery from DTO ==========
+    @Transactional
+    public Delivery markPaymentAsPaid(Long deliveryId) {
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new RuntimeException("Delivery not found"));
+        delivery.setPaymentStatus("PAID");
+        delivery.setUpdatedAt(LocalDateTime.now());
+        return deliveryRepository.save(delivery);
+    }
+
     @Transactional
     public Delivery createDelivery(CreateDeliveryRequest request, Long senderUserId) {
         Sender sender = senderRepository.findByUserId(senderUserId)
@@ -59,6 +67,8 @@ public class DeliveryService {
         delivery.setStatus("PENDING");
         delivery.setTrackingNumber(generateTrackingNumber());
         delivery.setCreatedAt(LocalDateTime.now());
+        delivery.setPaymentMethod(request.getPaymentMethod());
+        delivery.setPaymentStatus(request.getPaymentStatus());
 
         // Calculate real distance and cost
         double distanceKm = distanceService.calculateDistanceInKm(
@@ -86,11 +96,6 @@ public class DeliveryService {
         // Alternative: return "QP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
-    // ========== EXISTING METHODS (keep them as they are) ==========
-
-    // Original createDelivery (if still needed, but you can deprecate/remove)
-    // @Transactional
-    // public Delivery createDelivery(Delivery delivery) { ... }
 
     public Optional<Delivery> getDeliveryById(Long id) {
         return deliveryRepository.findById(id);

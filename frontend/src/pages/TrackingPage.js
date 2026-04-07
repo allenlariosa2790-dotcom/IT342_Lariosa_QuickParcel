@@ -14,7 +14,6 @@ const TrackingPage = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Get user from localStorage
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
@@ -185,6 +184,23 @@ const TrackingPage = () => {
                     <p className="font-medium">₱{delivery.estimatedCost.toFixed(2)}</p>
                   </div>
                 )}
+
+                {/* Payment Information */}
+                {delivery.paymentMethod && (
+                  <div>
+                    <p className="text-gray-500 text-sm">Payment Method</p>
+                    <p className="font-medium">{delivery.paymentMethod}</p>
+                  </div>
+                )}
+                {delivery.paymentStatus && (
+                  <div>
+                    <p className="text-gray-500 text-sm">Payment Status</p>
+                    <p className={`font-medium ${delivery.paymentStatus === 'PAID' ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {delivery.paymentStatus}
+                    </p>
+                  </div>
+                )}
+
                 {delivery.notes && (
                   <div className="col-span-2">
                     <p className="text-gray-500 text-sm">Notes</p>

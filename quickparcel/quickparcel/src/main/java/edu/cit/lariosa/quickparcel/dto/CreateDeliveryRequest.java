@@ -20,6 +20,9 @@ public class CreateDeliveryRequest {
     private String notes;
     private LocalDateTime scheduledTime;
 
+    private String paymentMethod;
+    private String paymentStatus;
+
     // Getters and setters
     public ParcelInfo getParcel() { return parcel; }
     public void setParcel(ParcelInfo parcel) { this.parcel = parcel; }
@@ -36,6 +39,11 @@ public class CreateDeliveryRequest {
     public LocalDateTime getScheduledTime() { return scheduledTime; }
     public void setScheduledTime(LocalDateTime scheduledTime) { this.scheduledTime = scheduledTime; }
 
+    public String getPaymentMethod(){return paymentMethod;}
+    public void setPaymentMethod(String paymentMethod){this.paymentMethod = paymentMethod;}
+
+    public String getPaymentStatus(){return paymentStatus;}
+    public void setPaymentStatus(String paymentStatus){this.paymentStatus = paymentStatus;}
     // Inner class for parcel details
     public static class ParcelInfo {
         @NotBlank(message = "Parcel name is required")

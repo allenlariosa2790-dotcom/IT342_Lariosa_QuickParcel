@@ -1,50 +1,67 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
+import { getAvailableDeliveries, acceptDelivery } from '../services/delivery';
 
 const AvailableDeliveries = () => {
-  const [deliveries] = useState([
-    {
-      id: 'QP-2026-007',
-      size: 'Medium',
-      pickup: '123 Main St, Downtown',
-      dropoff: '456 Oak Ave, Uptown',
-      distance: '3.2 km',
-      weight: '2.5 kg',
-      earnings: '$8.50'
-    },
-    {
-      id: 'QP-2026-008',
-      size: 'Large',
-      pickup: '789 Elm St, Midtown',
-      dropoff: '321 Pine Rd, Suburbs',
-      distance: '5.8 km',
-      weight: '4.0 kg',
-      earnings: '$12.00'
-    },
-    {
-      id: 'QP-2026-009',
-      size: 'Small',
-      pickup: '555 Market St, Downtown',
-      dropoff: '888 Broadway, Center',
-      distance: '2.1 km',
-      weight: '1.0 kg',
-      earnings: '$6.50'
-    },
-    {
-      id: 'QP-2026-010',
-      size: 'Medium',
-      pickup: '222 First St, Northside',
-      dropoff: '777 Second Ave, Southside',
-      distance: '4.5 km',
-      weight: '3.2 kg',
-      earnings: '$10.00'
-    }
-  ]);
+  const navigate = useNavigate();
+  const [deliveries, setDeliveries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleAccept = (id) => {
-    alert(`Delivery ${id} accepted! (Demo)`);
+  useEffect(() => {
+    fetchDeliveries();
+  }, []);
+
+  const fetchDeliveries = async () => {
+    try {
+      const response = await getAvailableDeliveries();
+      let data = [];
+      if (Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response.data && Array.isArray(response.data.deliveries)) {
+        data = response.data.deliveries;
+      } else if (response.data && Array.isArray(response.data.content)) {
+        data = response.data.content;
+      } else {
+        console.warn('Unexpected response structure:', response.data);
+      }
+      setDeliveries(data);
+    } catch (err) {
+      setError('Failed to load available deliveries');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleAccept = async (deliveryId) => {
+    try {
+      await acceptDelivery(deliveryId);
+      alert('Delivery accepted!');
+      fetchDeliveries(); // refresh list
+    } catch (err) {
+      alert('Accept failed');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex">
+          <Sidebar userType="RIDER" />
+          <div className="flex-1 p-8 flex justify-center items-center">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p>Loading available deliveries...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,47 +69,52 @@ const AvailableDeliveries = () => {
       <div className="flex">
         <Sidebar userType="RIDER" />
         <div className="flex-1 p-8">
-          <h1 className="text-2xl font-bold mb-6">Available Deliveries</h1>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {deliveries.map((delivery) => (
-              <div key={delivery.id} className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-semibold text-lg">{delivery.id}</span>
-                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{delivery.size}</span>
-                </div>
-                <div className="text-sm text-gray-600 mb-3">
-                  <div className="flex items-start mb-1">
-                    <span className="mr-2">📍</span>
-                    <div>
-                      <div className="font-medium">From:</div>
-                      <div>{delivery.pickup}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <span className="mr-2">🏁</span>
-                    <div>
-                      <div className="font-medium">To:</div>
-                      <div>{delivery.dropoff}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center text-sm border-t pt-3">
-                  <div className="flex space-x-3">
-                    <span className="text-gray-500">📏 {delivery.distance}</span>
-                    <span className="text-gray-500">⚖️ {delivery.weight}</span>
-                  </div>
-                  <span className="font-bold text-[#2563EB]">{delivery.earnings}</span>
-                </div>
-                <button
-                  onClick={() => handleAccept(delivery.id)}
-                  className="w-full mt-3 bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  Accept Delivery
-                </button>
-              </div>
-            ))}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Available Deliveries ({deliveries.length})</h1>
+            <button
+              onClick={() => navigate('/rider-dashboard')}
+              className="text-[#2563EB] hover:underline"
+            >
+              ← Back to Dashboard
+            </button>
           </div>
+
+          {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+
+          {deliveries.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
+              No available deliveries at the moment.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {deliveries.map((delivery) => (
+                <div key={delivery.id} className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-semibold">{delivery.trackingNumber}</span>
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      {delivery.parcel?.size || 'Standard'}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    <div>From: {delivery.pickupAddress}</div>
+                    <div>To: {delivery.dropoffAddress}</div>
+                  </div>
+                  <div className="flex justify-between text-sm mb-3">
+                    <span>📍 {delivery.distance ? `${delivery.distance.toFixed(2)} km` : 'Distance pending'}</span>
+                    <span className="font-semibold text-[#2563EB]">
+                      ₱{delivery.estimatedCost?.toFixed(2) || '0.00'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleAccept(delivery.id)}
+                    className="w-full bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    Accept
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

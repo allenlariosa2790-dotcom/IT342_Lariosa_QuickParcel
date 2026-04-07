@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,6 +180,16 @@ public class DeliveryController {
         response.put("success", true);
         response.put("data", active);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/mark-paid")
+    public ResponseEntity<?> markDeliveryAsPaid(@PathVariable Long id) {
+        try {
+            Delivery delivery = deliveryService.markPaymentAsPaid(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Payment marked as collected.", "data", delivery));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/calculate-distance")

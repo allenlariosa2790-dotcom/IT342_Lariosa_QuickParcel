@@ -72,6 +72,12 @@ public class Delivery {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "payment_method")
+    private String paymentMethod;   // "COD"
+
+    @Column(name = "payment_status")
+    private String paymentStatus;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -142,6 +148,12 @@ public class Delivery {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

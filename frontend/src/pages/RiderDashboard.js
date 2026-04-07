@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
 import { getAvailableDeliveries, acceptDelivery, getMyDeliveries, updateDeliveryStatus } from '../services/delivery';
+import api from '../services/api'; // Import api for mark-paid endpoint
 
 const RiderDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [availableDeliveries, setAvailableDeliveries] = useState([]);
-  const [activeDeliveries, setActiveDeliveries] = useState([]); // <-- array
+  const [activeDeliveries, setActiveDeliveries] = useState([]);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -58,8 +59,11 @@ const RiderDashboard = () => {
     try {
       const response = await getMyDeliveries();
       const deliveries = Array.isArray(response.data) ? response.data : [];
-      const activeStatuses = ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'];
-      const active = deliveries.filter(d => activeStatuses.includes(d.status));
+      // Active = in progress OR delivered but not yet paid
+      const active = deliveries.filter(d =>
+        ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'].includes(d.status) ||
+        (d.status === 'DELIVERED' && d.paymentStatus !== 'PAID')
+      );
       setActiveDeliveries(active);
     } catch (err) {
       console.error('Failed to fetch active deliveries:', err);
@@ -81,13 +85,24 @@ const RiderDashboard = () => {
     setUpdating(true);
     try {
       await updateDeliveryStatus(deliveryId, newStatus, 'Current location');
-      await fetchActiveDeliveries(); // refresh the list
+      await fetchActiveDeliveries();
       await fetchAvailableDeliveries();
       alert(`Status updated to ${newStatus}`);
     } catch (error) {
       alert('Failed to update status');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const markPaymentAsPaid = async (deliveryId) => {
+    try {
+      await api.put(`/deliveries/${deliveryId}/mark-paid`);
+      alert('Payment marked as collected!');
+      await fetchActiveDeliveries(); // refresh to update payment status
+    } catch (err) {
+      console.error('Failed to mark payment:', err);
+      alert('Failed to update payment status');
     }
   };
 
@@ -144,7 +159,7 @@ const RiderDashboard = () => {
               {availableDeliveries.length === 0 ? (
                 <p className="text-gray-500 col-span-3">No deliveries available at the moment.</p>
               ) : (
-                availableDeliveries.map((delivery) => (
+                availableDeliveries.slice(0, 3).map((delivery) => (
                   <div key={delivery.id} className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-semibold">{delivery.trackingNumber}</span>
@@ -189,6 +204,14 @@ const RiderDashboard = () => {
                             {delivery.pickupAddress} → {delivery.dropoffAddress}
                           </div>
                           <div className="text-sm text-green-600 mb-2">Status: {delivery.status}</div>
+                          {delivery.paymentMethod && (
+                            <div className="text-sm text-gray-600">
+                              Payment: {delivery.paymentMethod} -{' '}
+                              <span className={delivery.paymentStatus === 'PAID' ? 'text-green-600' : 'text-yellow-600'}>
+                                {delivery.paymentStatus || 'PENDING'}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="text-right">
                           <div className="font-bold text-[#2563EB]">₱{delivery.estimatedCost?.toFixed(2)}</div>
@@ -217,6 +240,15 @@ const RiderDashboard = () => {
                         >
                           Delivered
                         </button>
+                        {/* COD Payment Button – only show if payment method is COD and not yet paid */}
+                        {delivery.paymentMethod === 'COD' && delivery.paymentStatus !== 'PAID' && (
+                          <button
+                            onClick={() => markPaymentAsPaid(delivery.id)}
+                            className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                          >
+                            Confirm Payment Collected
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

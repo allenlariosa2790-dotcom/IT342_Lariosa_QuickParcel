@@ -1,7 +1,27 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.5] - 2026-04-07
 
+### Added
+- **Unified Cost Calculation** – Backend `/api/deliveries/calculate-distance` now uses the same formula as `DeliveryService` (base fare + per‑km + weight surcharge), ensuring frontend preview matches stored cost.
+- **Enhanced Distance Service** – Added fallback to OSRM public routing and Nominatim geocoding when ORS API key is missing or fails; reduces “using estimate” errors.
+
+### Fixed
+- **Tracking page** – Last updated timestamp now displays correctly (was showing N/A).
+- **Sender Dashboard** – Create Delivery button now navigates properly.
+- **Estimated cost mismatch** – Preview cost now matches the cost saved in database and shown on tracking page.
+- **LocationPicker height** – Map increased from `h-64` to `h-96` for better usability.
+- **RiderDashboard** – Active deliveries now show all (ACCEPTED, PICKED_UP, IN_TRANSIT), not just one.
+- **Distance calculation fallback** – No longer shows error banner when fallback works; uses OSRM/Nominatim seamlessly.
+
+### Changed
+- Frontend `calculateDistance` service now accepts `weight` parameter.
+- `CreateDelivery` passes parcel weight to `/calculate-distance` endpoint.
+
+---
+## [0.4]
+-NA
 ## [0.3] - 2026-03-28
 ### Added
 - **Complete Backend Delivery Management System**

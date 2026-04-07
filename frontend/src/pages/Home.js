@@ -8,7 +8,7 @@ const Home = () => {
     <div className="min-h-screen">
       <Navbar />
 
-      {/* Hero Section - Matches SDD */}
+      {/* Hero Section */}
       <section className="bg-gradient-to-r from-[#2563EB] to-blue-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="text-center">
@@ -30,8 +30,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* How It Works - 3 Steps - Matches SDD */}
-      <section className="py-20 bg-white">
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -60,8 +60,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Grid - 2x2 - Matches SDD */}
-      <section className="py-20 bg-gray-50">
+      {/* Why Choose QuickParcel / About Section */}
+      <section id="about" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose QuickParcel</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -113,7 +113,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials - Matches SDD */}
+      {/* Testimonials */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">What Our Users Say</h2>

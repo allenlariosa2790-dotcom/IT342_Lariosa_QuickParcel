@@ -2,68 +2,93 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
+import { getAvailableDeliveries, acceptDelivery, getMyDeliveries, updateDeliveryStatus } from '../services/delivery';
 
 const RiderDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Mock data for available deliveries
-  const availableDeliveries = [
-    {
-      id: 'QP-2026-007',
-      size: 'Medium',
-      pickup: '123 Main St, Downtown',
-      dropoff: '456 Oak Ave, Uptown',
-      distance: '3.2 km',
-      weight: '2.5 kg',
-      earnings: '$8.50'
-    },
-    {
-      id: 'QP-2026-008',
-      size: 'Large',
-      pickup: '789 Elm St, Midtown',
-      dropoff: '321 Pine Rd, Suburbs',
-      distance: '5.8 km',
-      weight: '4.0 kg',
-      earnings: '$12.00'
-    },
-    {
-      id: 'QP-2026-009',
-      size: 'Small',
-      pickup: '555 Market St, Downtown',
-      dropoff: '888 Broadway, Center',
-      distance: '2.1 km',
-      weight: '1.0 kg',
-      earnings: '$6.50'
-    }
-  ];
-
-  // Mock data for active delivery
-  const activeDelivery = {
-    id: 'QP-2026-001',
-    pickup: '123 Main St, Downtown',
-    dropoff: '456 Oak Ave, Uptown',
-    status: 'Picked up at 11:15 AM'
-  };
+  const [availableDeliveries, setAvailableDeliveries] = useState([]);
+  const [activeDeliveries, setActiveDeliveries] = useState([]); // <-- array
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-
     if (!token || !userData) {
       navigate('/login');
       return;
     }
-
     setUser(JSON.parse(userData));
-    setLoading(false);
+    fetchData();
   }, [navigate]);
 
-  const handleAcceptDelivery = (deliveryId) => {
-    alert(`Delivery ${deliveryId} accepted! (Demo functionality)`);
-    // In real app, this would call an API
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([fetchAvailableDeliveries(), fetchActiveDeliveries()]);
+    } catch (error) {
+      console.error('Error fetching data', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAvailableDeliveries = async () => {
+    try {
+      const response = await getAvailableDeliveries();
+      let deliveries = [];
+      if (Array.isArray(response.data)) {
+        deliveries = response.data;
+      } else if (response.data && Array.isArray(response.data.deliveries)) {
+        deliveries = response.data.deliveries;
+      } else if (response.data && Array.isArray(response.data.content)) {
+        deliveries = response.data.content;
+      } else {
+        console.warn('Unexpected response structure:', response.data);
+      }
+      setAvailableDeliveries(deliveries);
+    } catch (err) {
+      console.error('Failed to fetch available deliveries:', err);
+      setAvailableDeliveries([]);
+    }
+  };
+
+  const fetchActiveDeliveries = async () => {
+    try {
+      const response = await getMyDeliveries();
+      const deliveries = Array.isArray(response.data) ? response.data : [];
+      const activeStatuses = ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'];
+      const active = deliveries.filter(d => activeStatuses.includes(d.status));
+      setActiveDeliveries(active);
+    } catch (err) {
+      console.error('Failed to fetch active deliveries:', err);
+      setActiveDeliveries([]);
+    }
+  };
+
+  const handleAccept = async (deliveryId) => {
+    try {
+      await acceptDelivery(deliveryId);
+      await Promise.all([fetchAvailableDeliveries(), fetchActiveDeliveries()]);
+      alert('Delivery accepted!');
+    } catch (error) {
+      alert('Accept failed');
+    }
+  };
+
+  const handleStatusUpdate = async (deliveryId, newStatus) => {
+    setUpdating(true);
+    try {
+      await updateDeliveryStatus(deliveryId, newStatus, 'Current location');
+      await fetchActiveDeliveries(); // refresh the list
+      await fetchAvailableDeliveries();
+      alert(`Status updated to ${newStatus}`);
+    } catch (error) {
+      alert('Failed to update status');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   if (loading) {
@@ -87,7 +112,7 @@ const RiderDashboard = () => {
           <div className="bg-gradient-to-r from-[#2563EB] to-blue-700 text-white rounded-xl p-6 mb-8">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold">Welcome back, {user?.firstName || 'Michael'}!</h1>
+                <h1 className="text-2xl font-bold">Welcome back, {user?.firstName || 'Rider'}!</h1>
                 <p className="opacity-90 mt-1">Ready to earn today?</p>
               </div>
               <div className="bg-white text-[#2563EB] px-4 py-2 rounded-lg font-semibold">
@@ -96,7 +121,7 @@ const RiderDashboard = () => {
             </div>
           </div>
 
-          {/* Delivery Hotspots Map Placeholder */}
+          {/* Map placeholder */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-8">
             <h3 className="text-lg font-bold mb-4">Delivery Hotspots</h3>
             <div className="bg-gray-100 h-48 rounded-lg flex items-center justify-center">
@@ -107,47 +132,95 @@ const RiderDashboard = () => {
           {/* Available Deliveries */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">Available Deliveries (3)</h3>
-              <button className="text-[#2563EB] hover:underline">View All</button>
+              <h3 className="text-lg font-bold">Available Deliveries ({availableDeliveries.length})</h3>
+              <button
+                onClick={() => navigate('/available-deliveries')}
+                className="text-[#2563EB] hover:underline"
+              >
+                View All
+              </button>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {availableDeliveries.map((delivery) => (
-                <div key={delivery.id} className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-semibold">{delivery.id}</span>
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{delivery.size}</span>
+              {availableDeliveries.length === 0 ? (
+                <p className="text-gray-500 col-span-3">No deliveries available at the moment.</p>
+              ) : (
+                availableDeliveries.map((delivery) => (
+                  <div key={delivery.id} className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-semibold">{delivery.trackingNumber}</span>
+                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                        {delivery.parcel?.size || 'Standard'}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 mb-2">
+                      <div>From: {delivery.pickupAddress}</div>
+                      <div>To: {delivery.dropoffAddress}</div>
+                    </div>
+                    <div className="flex justify-between text-sm mb-3">
+                      <span>📍 {delivery.distance ? `${delivery.distance.toFixed(2)} km` : 'Distance pending'}</span>
+                      <span className="font-semibold text-[#2563EB]">
+                        ₱{delivery.estimatedCost?.toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleAccept(delivery.id)}
+                      className="w-full bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Accept
+                    </button>
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    <div>From: {delivery.pickup}</div>
-                    <div>To: {delivery.dropoff}</div>
-                  </div>
-                  <div className="flex justify-between text-sm mb-3">
-                    <span>📍 {delivery.distance}</span>
-                    <span>⚖️ {delivery.weight}</span>
-                    <span className="font-semibold text-[#2563EB]">{delivery.earnings}</span>
-                  </div>
-                  <button
-                    onClick={() => handleAcceptDelivery(delivery.id)}
-                    className="w-full bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                  >
-                    Accept
-                  </button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
-          {/* Active Delivery */}
-          {activeDelivery && (
-            <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-              <h3 className="text-lg font-bold mb-4">Active Delivery</h3>
-              <div className="border-l-4 border-[#2563EB] pl-4">
-                <div className="font-semibold">{activeDelivery.id}</div>
-                <div className="text-sm text-gray-600 mb-2">
-                  {activeDelivery.pickup} → {activeDelivery.dropoff}
-                </div>
-                <div className="text-sm text-green-600">✅ {activeDelivery.status}</div>
+          {/* Active Deliveries (Multiple) */}
+          {activeDeliveries.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-bold mb-4">Your Active Deliveries ({activeDeliveries.length})</h3>
+              <div className="space-y-4">
+                {activeDeliveries.map((delivery) => (
+                  <div key={delivery.id} className="bg-white rounded-xl shadow-md p-6">
+                    <div className="border-l-4 border-[#2563EB] pl-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-semibold text-lg">{delivery.trackingNumber}</div>
+                          <div className="text-sm text-gray-600 mb-2">
+                            {delivery.pickupAddress} → {delivery.dropoffAddress}
+                          </div>
+                          <div className="text-sm text-green-600 mb-2">Status: {delivery.status}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-[#2563EB]">₱{delivery.estimatedCost?.toFixed(2)}</div>
+                          <div className="text-xs text-gray-500">{delivery.distance?.toFixed(2)} km</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-3 flex-wrap">
+                        <button
+                          onClick={() => handleStatusUpdate(delivery.id, 'PICKED_UP')}
+                          disabled={updating || delivery.status !== 'ACCEPTED'}
+                          className="bg-yellow-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                        >
+                          Picked Up
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(delivery.id, 'IN_TRANSIT')}
+                          disabled={updating || delivery.status !== 'PICKED_UP'}
+                          className="bg-blue-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                        >
+                          In Transit
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(delivery.id, 'DELIVERED')}
+                          disabled={updating || delivery.status !== 'IN_TRANSIT'}
+                          className="bg-green-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                        >
+                          Delivered
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

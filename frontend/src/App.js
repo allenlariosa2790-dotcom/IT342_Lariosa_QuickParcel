@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -7,6 +8,7 @@ import SenderDashboard from './pages/SenderDashboard';
 import RiderDashboard from './pages/RiderDashboard';
 import CreateDelivery from './pages/CreateDelivery';
 import MyDeliveries from './pages/MyDeliveries';
+import TrackingPage from './pages/TrackingPage';
 import Profile from './pages/Profile';
 import AvailableDeliveries from './pages/AvailableDeliveries';
 import Earnings from './pages/Earnings';
@@ -30,25 +32,19 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected Routes */}
+        {/* Sender Routes */}
         <Route
           path="/sender-dashboard"
           element={
             <ProtectedRoute allowedRoles={['SENDER']}>
               <SenderDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/rider-dashboard"
-          element={
-            <ProtectedRoute allowedRoles={['RIDER']}>
-              <RiderDashboard />
             </ProtectedRoute>
           }
         />
@@ -60,11 +56,13 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Rider Routes */}
         <Route
-          path="/my-deliveries"
+          path="/rider-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
-              <MyDeliveries />
+            <ProtectedRoute allowedRoles={['RIDER']}>
+              <RiderDashboard />
             </ProtectedRoute>
           }
         />
@@ -84,14 +82,35 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Shared Routes (both roles) */}
+        <Route
+          path="/my-deliveries"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+              <MyDeliveries />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tracking/:id"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+              <TrackingPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
               <Profile />
             </ProtectedRoute>
           }
         />
+
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );

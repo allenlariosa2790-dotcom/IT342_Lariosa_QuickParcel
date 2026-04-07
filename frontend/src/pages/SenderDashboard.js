@@ -62,7 +62,8 @@ const SenderDashboard = () => {
                 <h1 className="text-2xl font-bold">Welcome back, {user.firstName}!</h1>
                 <p className="opacity-90 mt-1">Here's what's happening with your deliveries today</p>
               </div>
-              <button className="bg-white text-[#2563EB] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300">
+              <button onClick={() => navigate('/create-delivery')}
+                className="bg-white text-[#2563EB] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300">
                 + Create Delivery
               </button>
             </div>

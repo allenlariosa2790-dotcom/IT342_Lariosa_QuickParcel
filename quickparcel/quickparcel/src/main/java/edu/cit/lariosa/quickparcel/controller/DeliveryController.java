@@ -1,9 +1,12 @@
 package edu.cit.lariosa.quickparcel.controller;
 
+import edu.cit.lariosa.quickparcel.dto.CreateDeliveryRequest;
 import edu.cit.lariosa.quickparcel.entity.Delivery;
 import edu.cit.lariosa.quickparcel.entity.TrackingHistory;
 import edu.cit.lariosa.quickparcel.security.UserDetailsImpl;
 import edu.cit.lariosa.quickparcel.service.DeliveryService;
+import edu.cit.lariosa.quickparcel.service.DistanceService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/deliveries")
@@ -20,12 +24,17 @@ public class DeliveryController {
 
     @Autowired
     private DeliveryService deliveryService;
+    @Autowired
+    private DistanceService distanceService;
 
     // Create a new delivery (Sender only)
     @PostMapping
-    public ResponseEntity<?> createDelivery(@RequestBody Delivery delivery) {
+    public ResponseEntity<?> createDelivery(@Valid @RequestBody CreateDeliveryRequest request,
+                                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
-            Delivery savedDelivery = deliveryService.createDelivery(delivery);
+            // userDetails.getId() is the user_id from the users table.
+            // Your DeliveryService should accept the DTO and the sender's user id.
+            Delivery savedDelivery = deliveryService.createDelivery(request, userDetails.getId());
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", savedDelivery);
@@ -77,7 +86,14 @@ public class DeliveryController {
     // Get my deliveries (for sender - based on authenticated user)
     @GetMapping("/my")
     public ResponseEntity<?> getMyDeliveries(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        List<Delivery> deliveries = deliveryService.getDeliveriesBySenderId(userDetails.getId());
+        List<Delivery> deliveries;
+        if (userDetails.getUserType().equals("SENDER")) {
+            deliveries = deliveryService.getDeliveriesBySenderId(userDetails.getId());
+        } else if (userDetails.getUserType().equals("RIDER")) {
+            deliveries = deliveryService.getDeliveriesByRiderId(userDetails.getId());
+        } else {
+            deliveries = List.of();
+        }
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", deliveries);
@@ -147,5 +163,45 @@ public class DeliveryController {
         response.put("success", true);
         response.put("data", history);
         return ResponseEntity.ok(response);
+    }
+
+    // Get activedelivery
+    @GetMapping("/my/active")
+    public ResponseEntity<?> getMyActiveDelivery(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        // Rider's user id -> find rider record -> find delivery with status not DELIVERED/CANCELLED and rider.id = that rider
+        List<Delivery> deliveries = deliveryService.getDeliveriesByRiderId(userDetails.getId())
+                .stream()
+                .filter(d -> !d.getStatus().equals("DELIVERED") && !d.getStatus().equals("CANCELLED"))
+                .collect(Collectors.toList());
+        Delivery active = deliveries.isEmpty() ? null : deliveries.get(0);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", active);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/calculate-distance")
+    public ResponseEntity<?> calculateDistance(@RequestBody Map<String, Object> request) {
+        String origin = (String) request.get("pickupAddress");
+        String destination = (String) request.get("dropoffAddress");
+        Double weight = request.containsKey("weight") ? ((Number) request.get("weight")).doubleValue() : 1.0;
+
+        if (origin == null || destination == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Missing addresses"));
+        }
+
+        double distanceKm = distanceService.calculateDistanceInKm(origin, destination);
+        double estimatedCost = calculateEstimatedCost(distanceKm, weight);
+
+        return ResponseEntity.ok(Map.of(
+                "distance", distanceKm,
+                "estimatedCost", estimatedCost
+        ));
+    }
+    private double calculateEstimatedCost(double distanceKm, double weightKg) {
+        double baseFare = 50.0;
+        double perKmRate = 20.0;
+        double weightSurcharge = Math.max(0, (weightKg - 2) * 10);
+        return baseFare + (distanceKm * perKmRate) + weightSurcharge;
     }
 }

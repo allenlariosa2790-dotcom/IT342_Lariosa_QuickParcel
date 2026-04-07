@@ -2,10 +2,9 @@
 
 ## Project Overview
 **Project:** QuickParcel - On-Demand Logistics Platform  
-**Version:** 0.3  
-**Last Updated:** March 28, 2026  
-**Status:** Backend Delivery System Complete - Frontend Integration Next
-
+**Version:** 0.5  
+**Last Updated:** April 7, 2026  
+**Status:** Cost Calculation and fixes
 ---
 
 ## 📋 Phase 1: Project Setup & Planning (23 tasks)
@@ -157,20 +156,20 @@
 - [ ] Add edit profile functionality
 
 ### 3.7 Create Delivery Flow (6 tasks)
-- [ ] Create Step 1: Parcel details form
-- [ ] Create Step 2: Pickup/dropoff address form
-- [ ] Create Step 3: Review and payment
+- [x] Create Step 1: Parcel details form
+- [x] Create Step 2: Pickup/dropoff address form
+- [x] Create Step 3: Review and payment
 - [ ] Implement image upload
 - [ ] Add form validation
-- [ ] Connect to backend API
+- [x] Connect to backend API
 
 ### 3.8 Deliveries Management (6 tasks)
-- [ ] Create My Deliveries list page
+- [x] Create My Deliveries list page
 - [ ] Add filter tabs (All, Active, Completed, Cancelled)
 - [ ] Implement search functionality
-- [ ] Create delivery cards with status badges
-- [ ] Add track delivery button
-- [ ] Create delivery tracking page with status timeline
+- [x] Create delivery cards with status badges
+- [x] Add track delivery button
+- [x] Create delivery tracking page with status timeline
 
 ### 3.9 Additional Rider Pages (2 tasks)
 - [x] Create Available Deliveries page
@@ -234,9 +233,9 @@
 ## 🔌 Phase 5: Integrations (20 tasks)
 
 ### 5.1 External APIs (6 tasks)
-- [ ] Integrate Google Maps API for distance calculation
-- [ ] Implement geocoding for addresses
-- [ ] Add map view for delivery tracking
+- [x] Integrate Maps API for distance calculation
+- [x] Implement geocoding for addresses
+- [x] Add map view for delivery tracking
 - [ ] Integrate payment gateway (PayPal/GCash/Stripe sandbox)
 - [ ] Implement payment processing flow
 - [ ] Handle payment success/failure callbacks

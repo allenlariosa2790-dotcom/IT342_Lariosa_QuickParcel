@@ -1,5 +1,6 @@
 package edu.cit.lariosa.quickparcel.service;
 
+import edu.cit.lariosa.quickparcel.dto.CreateDeliveryRequest;
 import edu.cit.lariosa.quickparcel.entity.*;
 import edu.cit.lariosa.quickparcel.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class DeliveryService {
@@ -27,42 +29,89 @@ public class DeliveryService {
     @Autowired
     private TrackingHistoryRepository trackingHistoryRepository;
 
-    // Create a new delivery request
+    @Autowired
+    private DistanceService distanceService;
+
+    // ========== NEW METHOD for creating delivery from DTO ==========
     @Transactional
-    public Delivery createDelivery(Delivery delivery) {
-        // Generate tracking number
-        delivery.setTrackingNumber("QP-" + System.currentTimeMillis());
+    public Delivery createDelivery(CreateDeliveryRequest request, Long senderUserId) {
+        Sender sender = senderRepository.findByUserId(senderUserId)
+                .orElseThrow(() -> new RuntimeException("Sender not found for user id: " + senderUserId));
+
+        Parcel parcel = new Parcel();
+        parcel.setName(request.getParcel().getName());
+        parcel.setDescription(request.getParcel().getDescription());
+        parcel.setWeight(request.getParcel().getWeight());
+        parcel.setSize(request.getParcel().getSize());
+        parcel.setCategory(request.getParcel().getCategory());
+        parcel.setIsFragile(request.getParcel().getIsFragile());
+        parcel.setSender(sender);
+        parcel.setCreatedAt(LocalDateTime.now());
+        parcel = parcelRepository.save(parcel);
+
+        Delivery delivery = new Delivery();
+        delivery.setParcel(parcel);
+        delivery.setSender(sender);
+        delivery.setPickupAddress(request.getPickupAddress());
+        delivery.setDropoffAddress(request.getDropoffAddress());
+        delivery.setNotes(request.getNotes());
+        delivery.setScheduledTime(request.getScheduledTime());
         delivery.setStatus("PENDING");
+        delivery.setTrackingNumber(generateTrackingNumber());
         delivery.setCreatedAt(LocalDateTime.now());
+
+        // Calculate real distance and cost
+        double distanceKm = distanceService.calculateDistanceInKm(
+                request.getPickupAddress(),
+                request.getDropoffAddress()
+        );
+        double estimatedCost = calculateEstimatedCost(distanceKm, request.getParcel().getWeight());
+
+        delivery.setDistance(distanceKm);
+        delivery.setEstimatedCost(estimatedCost);
+
         return deliveryRepository.save(delivery);
     }
 
-    // Get delivery by ID
+    private double calculateEstimatedCost(double distanceKm, double weightKg) {
+        double baseFare = 50.0;
+        double perKmRate = 20.0;
+        double weightSurcharge = Math.max(0, (weightKg - 2) * 10);
+        return baseFare + (distanceKm * perKmRate) + weightSurcharge;
+    }
+
+    // Helper to generate a unique tracking number
+    private String generateTrackingNumber() {
+        return "QP-" + System.currentTimeMillis();
+        // Alternative: return "QP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    // ========== EXISTING METHODS (keep them as they are) ==========
+
+    // Original createDelivery (if still needed, but you can deprecate/remove)
+    // @Transactional
+    // public Delivery createDelivery(Delivery delivery) { ... }
+
     public Optional<Delivery> getDeliveryById(Long id) {
         return deliveryRepository.findById(id);
     }
 
-    // Get delivery by tracking number
     public Optional<Delivery> getDeliveryByTrackingNumber(String trackingNumber) {
         return deliveryRepository.findByTrackingNumber(trackingNumber);
     }
 
-    // Get all deliveries for a sender
     public List<Delivery> getDeliveriesBySenderId(Long senderId) {
         return deliveryRepository.findBySenderId(senderId);
     }
 
-    // Get available deliveries for riders (PENDING status)
     public List<Delivery> getAvailableDeliveries() {
         return deliveryRepository.findByStatus("PENDING");
     }
 
-    // Get deliveries assigned to a rider
     public List<Delivery> getDeliveriesByRiderId(Long riderId) {
         return deliveryRepository.findByRiderId(riderId);
     }
 
-    // Update delivery status
     @Transactional
     public Delivery updateDeliveryStatus(Long deliveryId, String status, String location) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
@@ -72,7 +121,6 @@ public class DeliveryService {
         delivery.setStatus(status);
         delivery.setUpdatedAt(LocalDateTime.now());
 
-        // Record tracking history
         TrackingHistory history = new TrackingHistory();
         history.setDelivery(delivery);
         history.setStatus(status);
@@ -80,7 +128,6 @@ public class DeliveryService {
         history.setTimestamp(LocalDateTime.now());
         trackingHistoryRepository.save(history);
 
-        // Update timestamps based on status
         if ("PICKED_UP".equals(status)) {
             delivery.setPickedUpTime(LocalDateTime.now());
         } else if ("DELIVERED".equals(status)) {
@@ -90,7 +137,6 @@ public class DeliveryService {
         return deliveryRepository.save(delivery);
     }
 
-    // Accept delivery by rider
     @Transactional
     public Delivery acceptDelivery(Long deliveryId, Long riderId) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
@@ -103,7 +149,6 @@ public class DeliveryService {
         delivery.setStatus("ACCEPTED");
         delivery.setUpdatedAt(LocalDateTime.now());
 
-        // Record tracking history
         TrackingHistory history = new TrackingHistory();
         history.setDelivery(delivery);
         history.setStatus("ACCEPTED");
@@ -114,7 +159,6 @@ public class DeliveryService {
         return deliveryRepository.save(delivery);
     }
 
-    // Cancel delivery
     @Transactional
     public Delivery cancelDelivery(Long deliveryId) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
@@ -123,7 +167,6 @@ public class DeliveryService {
         delivery.setStatus("CANCELLED");
         delivery.setUpdatedAt(LocalDateTime.now());
 
-        // Record tracking history
         TrackingHistory history = new TrackingHistory();
         history.setDelivery(delivery);
         history.setStatus("CANCELLED");
@@ -134,7 +177,6 @@ public class DeliveryService {
         return deliveryRepository.save(delivery);
     }
 
-    // Get tracking history for a delivery
     public List<TrackingHistory> getTrackingHistory(Long deliveryId) {
         return trackingHistoryRepository.findByDeliveryIdOrderByTimestampAsc(deliveryId);
     }

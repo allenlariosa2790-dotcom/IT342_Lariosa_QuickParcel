@@ -2,6 +2,8 @@ package edu.cit.lariosa.quickparcel.service;
 
 import edu.cit.lariosa.quickparcel.dto.CreateDeliveryRequest;
 import edu.cit.lariosa.quickparcel.entity.*;
+import edu.cit.lariosa.quickparcel.payment.PaymentProcessor;
+import edu.cit.lariosa.quickparcel.payment.PaymentProcessorFactory;
 import edu.cit.lariosa.quickparcel.repository.*;
 import edu.cit.lariosa.quickparcel.strategy.CostCalculationStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,8 @@ public class DeliveryService {
 
     @Autowired
     private CostCalculationStrategy costStrategy;
+    @Autowired
+    private PaymentProcessorFactory paymentFactory;
 
     @Transactional
     public Delivery markPaymentAsPaid(Long deliveryId) {
@@ -83,7 +87,12 @@ public class DeliveryService {
         delivery.setDistance(distanceKm);
         delivery.setEstimatedCost(estimatedCost);
 
-        return deliveryRepository.save(delivery);
+        Delivery savedDelivery = deliveryRepository.save(delivery);
+
+        PaymentProcessor processor = paymentFactory.getProcessor(request.getPaymentMethod());
+        processor.processPayment(savedDelivery);
+
+        return savedDelivery;
     }
 
     // Helper to generate a unique tracking number

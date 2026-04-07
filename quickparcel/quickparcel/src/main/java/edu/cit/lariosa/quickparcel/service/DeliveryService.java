@@ -2,7 +2,10 @@ package edu.cit.lariosa.quickparcel.service;
 
 import edu.cit.lariosa.quickparcel.dto.CreateDeliveryRequest;
 import edu.cit.lariosa.quickparcel.entity.*;
+import edu.cit.lariosa.quickparcel.payment.PaymentProcessor;
+import edu.cit.lariosa.quickparcel.payment.PaymentProcessorFactory;
 import edu.cit.lariosa.quickparcel.repository.*;
+import edu.cit.lariosa.quickparcel.strategy.CostCalculationStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,11 @@ public class DeliveryService {
 
     @Autowired
     private DistanceService distanceService;
+
+    @Autowired
+    private CostCalculationStrategy costStrategy;
+    @Autowired
+    private PaymentProcessorFactory paymentFactory;
 
     @Transactional
     public Delivery markPaymentAsPaid(Long deliveryId) {
@@ -75,19 +83,16 @@ public class DeliveryService {
                 request.getPickupAddress(),
                 request.getDropoffAddress()
         );
-        double estimatedCost = calculateEstimatedCost(distanceKm, request.getParcel().getWeight());
-
+        double estimatedCost = costStrategy.calculate(distanceKm, request.getParcel().getWeight());
         delivery.setDistance(distanceKm);
         delivery.setEstimatedCost(estimatedCost);
 
-        return deliveryRepository.save(delivery);
-    }
+        Delivery savedDelivery = deliveryRepository.save(delivery);
 
-    private double calculateEstimatedCost(double distanceKm, double weightKg) {
-        double baseFare = 50.0;
-        double perKmRate = 20.0;
-        double weightSurcharge = Math.max(0, (weightKg - 2) * 10);
-        return baseFare + (distanceKm * perKmRate) + weightSurcharge;
+        PaymentProcessor processor = paymentFactory.getProcessor(request.getPaymentMethod());
+        processor.processPayment(savedDelivery);
+
+        return savedDelivery;
     }
 
     // Helper to generate a unique tracking number

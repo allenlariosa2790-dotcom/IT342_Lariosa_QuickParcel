@@ -6,6 +6,7 @@ import edu.cit.lariosa.quickparcel.entity.TrackingHistory;
 import edu.cit.lariosa.quickparcel.security.UserDetailsImpl;
 import edu.cit.lariosa.quickparcel.service.DeliveryService;
 import edu.cit.lariosa.quickparcel.service.DistanceService;
+import edu.cit.lariosa.quickparcel.strategy.CostCalculationStrategy;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,8 @@ public class DeliveryController {
     private DeliveryService deliveryService;
     @Autowired
     private DistanceService distanceService;
+    @Autowired
+    private CostCalculationStrategy costStrategy;
 
     // Create a new delivery (Sender only)
     @PostMapping
@@ -203,17 +206,11 @@ public class DeliveryController {
         }
 
         double distanceKm = distanceService.calculateDistanceInKm(origin, destination);
-        double estimatedCost = calculateEstimatedCost(distanceKm, weight);
-
+        double estimatedCost = costStrategy.calculate(distanceKm, weight);
         return ResponseEntity.ok(Map.of(
                 "distance", distanceKm,
                 "estimatedCost", estimatedCost
         ));
     }
-    private double calculateEstimatedCost(double distanceKm, double weightKg) {
-        double baseFare = 50.0;
-        double perKmRate = 20.0;
-        double weightSurcharge = Math.max(0, (weightKg - 2) * 10);
-        return baseFare + (distanceKm * perKmRate) + weightSurcharge;
-    }
+
 }

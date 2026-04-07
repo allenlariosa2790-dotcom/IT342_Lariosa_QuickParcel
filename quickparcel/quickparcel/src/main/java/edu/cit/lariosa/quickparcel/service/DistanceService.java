@@ -1,7 +1,7 @@
 package edu.cit.lariosa.quickparcel.service;
 
 import edu.cit.lariosa.quickparcel.distance.DistanceProvider;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -9,14 +9,14 @@ public class DistanceService {
 
     private final DistanceProvider distanceProvider;
 
-    @Autowired
-    public DistanceService(DistanceProvider distanceProvider) { // inject ChainedDistanceProvider
+    public DistanceService(@Qualifier("cachingDistanceProxy") DistanceProvider distanceProvider) {
         this.distanceProvider = distanceProvider;
     }
 
     public double calculateDistanceInKm(String origin, String destination) {
         double distance = distanceProvider.getDistanceInKm(origin, destination);
         if (distance < 0) {
+            // ultimate fallback heuristic
             return fallbackDistance(origin, destination);
         }
         return distance;

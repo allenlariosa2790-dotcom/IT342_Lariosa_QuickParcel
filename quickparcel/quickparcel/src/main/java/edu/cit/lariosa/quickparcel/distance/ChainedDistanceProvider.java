@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-@Primary
 public class ChainedDistanceProvider implements DistanceProvider {
 
     private final List<DistanceProvider> providers;

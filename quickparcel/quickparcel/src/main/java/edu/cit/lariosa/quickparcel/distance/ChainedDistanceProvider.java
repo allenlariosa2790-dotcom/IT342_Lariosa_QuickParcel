@@ -1,10 +1,12 @@
 package edu.cit.lariosa.quickparcel.distance;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
+@Primary
 public class ChainedDistanceProvider implements DistanceProvider {
 
     private final List<DistanceProvider> providers;

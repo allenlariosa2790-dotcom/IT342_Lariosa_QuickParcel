@@ -4,6 +4,8 @@ import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
 import LocationPicker from '../components/LocationPicker';
 import { createDelivery, calculateDistance } from '../services/delivery';
+import { createPayMongoPayment } from '../services/payment';
+import api from '../services/api';
 
 const CreateDelivery = () => {
   const navigate = useNavigate();
@@ -102,17 +104,41 @@ const CreateDelivery = () => {
       dropoffLatitude: dropoff.lat,
       dropoffLongitude: dropoff.lng,
       notes: notes,
-      paymentMethod: paymentMethod,
-      paymentStatus: 'PENDING',
       scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : null,
+      paymentMethod: paymentMethod,
+      paymentStatus: paymentMethod === 'COD' ? 'PENDING' : 'UNPAID',
     };
 
     try {
-      await createDelivery(payload);
-      navigate('/my-deliveries');
+      const deliveryResponse = await createDelivery(payload);
+
+      if (paymentMethod === 'COD') {
+        // COD: directly navigate to deliveries
+        navigate('/my-deliveries');
+      } else if (paymentMethod === 'PAYMONGO_GCASH') {
+        try {
+          const payment = await createPayMongoPayment(
+            deliveryResponse.data.id,
+            parseFloat(estimatedCost),
+            `Delivery ${deliveryResponse.data.trackingNumber}`
+          );
+
+          console.log('PayMongo payment response:', payment);
+
+          if (payment.checkoutUrl) {
+            // Redirect to PayMongo checkout
+            window.location.href = payment.checkoutUrl;
+          } else {
+            throw new Error('No checkout URL received');
+          }
+        } catch (paymentError) {
+          console.error('Payment creation failed:', paymentError);
+          setError('Failed to initialize payment. Please try again.');
+          setLoading(false);
+        }
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create delivery');
-    } finally {
       setLoading(false);
     }
   };
@@ -302,16 +328,24 @@ const CreateDelivery = () => {
                     <label className="block text-gray-700 font-medium mb-2">Payment Method *</label>
                     <div className="flex gap-4">
                       <label className="flex items-center">
-                        <input type="radio" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
+                        <input
+                          type="radio"
+                          value="COD"
+                          checked={paymentMethod === 'COD'}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          className="mr-2"
+                        />
                         Cash on Delivery
                       </label>
                       <label className="flex items-center">
-                        <input type="radio" value="paypal (coming soon)" checked={paymentMethod === 'paypal'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
-                        PayPal
-                      </label>
-                      <label className="flex items-center">
-                        <input type="radio" value="GCash (coming soon)" checked={paymentMethod === 'gcash'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-2" />
-                        GCash
+                        <input
+                          type="radio"
+                          value="PAYMONGO_GCASH"
+                          checked={paymentMethod === 'PAYMONGO_GCASH'}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          className="mr-2"
+                        />
+                        GCash (PayMongo)
                       </label>
                     </div>
                   </div>

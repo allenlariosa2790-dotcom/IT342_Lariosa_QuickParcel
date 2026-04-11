@@ -88,21 +88,21 @@ public class AuthController {
         // Create role-specific record based on user type
         if ("SENDER".equals(signUpRequest.getUserType())) {
             Sender sender = new Sender();
-            sender.setUserId(user.getId());
+            //sender.setUserId(user.getId());
             sender.setUser(user);
             sender.setCreatedAt(LocalDateTime.now());
             senderRepository.save(sender);
             logger.info("Sender record created for user ID: {}", user.getId());
         } else if ("RIDER".equals(signUpRequest.getUserType())) {
             Rider rider = new Rider();
-            rider.setUserId(user.getId());
+            //rider.setUserId(user.getId());
             rider.setUser(user);
             rider.setCreatedAt(LocalDateTime.now());
             riderRepository.save(rider);
             logger.info("Rider record created for user ID: {}", user.getId());
         } else if ("ADMIN".equals(signUpRequest.getUserType())) {
             Admin admin = new Admin();
-            admin.setUserId(user.getId());
+            //admin.setUserId(user.getId());
             admin.setUser(user);
             admin.setCreatedAt(LocalDateTime.now());
             adminRepository.save(admin);

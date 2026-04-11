@@ -12,6 +12,8 @@ import TrackingPage from './pages/TrackingPage';
 import Profile from './pages/Profile';
 import AvailableDeliveries from './pages/AvailableDeliveries';
 import Earnings from './pages/Earnings';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -108,6 +110,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Payment Routes (Public - accessed after redirect from PayMongo) */}
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/cancel" element={<PaymentCancel />} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" />} />

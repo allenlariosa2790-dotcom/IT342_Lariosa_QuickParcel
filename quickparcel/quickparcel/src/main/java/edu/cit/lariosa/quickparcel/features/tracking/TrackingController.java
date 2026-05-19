@@ -1,9 +1,9 @@
 package edu.cit.lariosa.quickparcel.features.tracking;
 
-import edu.cit.lariosa.quickparcel.features.auth.UserDetailsImpl;
 import edu.cit.lariosa.quickparcel.features.delivery.DeliveryService;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Delivery;
 import edu.cit.lariosa.quickparcel.features.shared.entity.TrackingHistory;
+import edu.cit.lariosa.quickparcel.features.auth.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,32 +13,31 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/deliveries")
+@RequestMapping("/api/tracking")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class TrackingController {
 
     @Autowired
     private DeliveryService deliveryService;
 
-    @GetMapping("/{id}")
+    @GetMapping("/delivery/{id}")
     public ResponseEntity<?> getDeliveryById(@PathVariable Long id) {
         return deliveryService.getDeliveryById(id)
-                .map(delivery -> {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", true);
-                    response.put("data", delivery);
-                    return ResponseEntity.ok(response);
-                })
+                .map(delivery -> ResponseEntity.ok(Map.of("success", true, "data", delivery)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/{id}/track")
+    @GetMapping("/tracking-number/{trackingNumber}")
+    public ResponseEntity<?> getDeliveryByTrackingNumber(@PathVariable String trackingNumber) {
+        return deliveryService.getDeliveryByTrackingNumber(trackingNumber)
+                .map(delivery -> ResponseEntity.ok(Map.of("success", true, "data", delivery)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/delivery/{id}/history")
     public ResponseEntity<?> getTrackingHistory(@PathVariable Long id) {
         List<TrackingHistory> history = deliveryService.getTrackingHistory(id);
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", history);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("success", true, "data", history));
     }
 
     @GetMapping("/my")
@@ -51,9 +50,6 @@ public class TrackingController {
         } else {
             deliveries = List.of();
         }
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", deliveries);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("success", true, "data", deliveries));
     }
 }

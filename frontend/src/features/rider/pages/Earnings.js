@@ -1,6 +1,6 @@
 import React from 'react';
-import Navbar from '../components/layout/Navbar';
-import Sidebar from '../components/layout/Sidebar';
+import Navbar from '../../shared/components/Navbar';
+import Sidebar from '../../shared/components/Sidebar';
 
 const Earnings = () => {
   const transactions = [

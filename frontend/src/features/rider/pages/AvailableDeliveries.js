@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Sidebar from '../components/layout/Sidebar';
-import { getAvailableDeliveries, acceptDelivery } from '../services/delivery';
+import Navbar from '../../shared/components/Navbar';
+import Sidebar from '../../shared/components/Sidebar';
+import { getAvailableDeliveries, acceptDelivery } from '../services/riderApi';
 
 const AvailableDeliveries = () => {
   const navigate = useNavigate();

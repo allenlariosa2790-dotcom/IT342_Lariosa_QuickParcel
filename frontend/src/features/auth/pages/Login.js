@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
+import Navbar from '../../shared/components/Navbar';
 import { login } from '../services/auth';
 
 const Login = () => {

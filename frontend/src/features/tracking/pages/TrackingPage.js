@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Sidebar from '../components/layout/Sidebar';
-import api from '../services/api';
+import Navbar from '../../shared/components/Navbar';
+import Sidebar from '../../shared/components/Sidebar';
+import { getDeliveryById, getTrackingHistory } from '../services/trackingApi';
 
 const TrackingPage = () => {
   const { id } = useParams();
@@ -13,41 +13,31 @@ const TrackingPage = () => {
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (e) {
-        console.error('Failed to parse user', e);
+    useEffect(() => {
+      const userData = localStorage.getItem('user');
+      if (userData) setUser(JSON.parse(userData));
+      if (id) {
+        fetchDeliveryAndHistory();
+      } else {
+        setError('No delivery ID provided');
+        setLoading(false);
       }
-    }
-    if (id) {
-      fetchDeliveryAndHistory();
-    } else {
-      setError('No delivery ID provided');
-      setLoading(false);
-    }
-  }, [id]);
+    }, [id]);
 
-  const fetchDeliveryAndHistory = async () => {
-    try {
-      console.log('Fetching delivery:', id);
-      const [deliveryRes, historyRes] = await Promise.all([
-        api.get(`/deliveries/${id}`),
-        api.get(`/deliveries/${id}/track`)
-      ]);
-      console.log('Delivery response:', deliveryRes.data);
-      console.log('History response:', historyRes.data);
-      setDelivery(deliveryRes.data.data);
-      setTrackingHistory(historyRes.data.data || []);
-    } catch (err) {
-      console.error('Error fetching tracking data:', err);
-      setError(err.response?.data?.message || 'Failed to load delivery details');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchDeliveryAndHistory = async () => {
+      try {
+        const [deliveryRes, historyRes] = await Promise.all([
+          getDeliveryById(id),
+          getTrackingHistory(id)
+        ]);
+        setDelivery(deliveryRes.data);
+        setTrackingHistory(historyRes.data || []);
+      } catch (err) {
+        setError('Failed to load delivery details');
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const getStatusBadge = (status) => {
     switch (status) {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
+import Navbar from '../../shared/components/Navbar';
 
 const PaymentCancel = () => {
   const navigate = useNavigate();

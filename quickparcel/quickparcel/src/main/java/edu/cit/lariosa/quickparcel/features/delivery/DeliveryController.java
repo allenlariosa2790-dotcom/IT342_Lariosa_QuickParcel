@@ -2,7 +2,6 @@ package edu.cit.lariosa.quickparcel.features.delivery;
 
 import edu.cit.lariosa.quickparcel.features.delivery.dto.CreateDeliveryRequest;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Delivery;
-import edu.cit.lariosa.quickparcel.features.shared.entity.TrackingHistory;
 import edu.cit.lariosa.quickparcel.features.auth.UserDetailsImpl;
 import edu.cit.lariosa.quickparcel.features.delivery.DeliveryService;
 import edu.cit.lariosa.quickparcel.features.delivery.DistanceService;
@@ -10,14 +9,10 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/deliveries")
@@ -26,6 +21,7 @@ public class DeliveryController {
 
     @Autowired
     private DeliveryService deliveryService;
+
     @Autowired
     private DistanceService distanceService;
 
@@ -34,72 +30,14 @@ public class DeliveryController {
     public ResponseEntity<?> createDelivery(@Valid @RequestBody CreateDeliveryRequest request,
                                             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
-            // userDetails.getId() is the user_id from the users table.
-            // Your DeliveryService should accept the DTO and the sender's user id.
             Delivery savedDelivery = deliveryService.createDelivery(request, userDetails.getId());
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", savedDelivery);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-    }
-
-    // Get delivery by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getDeliveryById(@PathVariable Long id) {
-        return deliveryService.getDeliveryById(id)
-                .map(delivery -> {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", true);
-                    response.put("data", delivery);
-                    return ResponseEntity.ok(response);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // Get delivery by tracking number
-    @GetMapping("/tracking/{trackingNumber}")
-    public ResponseEntity<?> getDeliveryByTrackingNumber(@PathVariable String trackingNumber) {
-        return deliveryService.getDeliveryByTrackingNumber(trackingNumber)
-                .map(delivery -> {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", true);
-                    response.put("data", delivery);
-                    return ResponseEntity.ok(response);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // Get available deliveries (for riders)
-    @GetMapping("/available")
-    public ResponseEntity<?> getAvailableDeliveries() {
-        List<Delivery> deliveries = deliveryService.getAvailableDeliveries();
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", deliveries);
-        return ResponseEntity.ok(response);
-    }
-
-    // Get my deliveries (for sender - based on authenticated user)
-    @GetMapping("/my")
-    public ResponseEntity<?> getMyDeliveries(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        List<Delivery> deliveries;
-        if (userDetails.getUserType().equals("SENDER")) {
-            deliveries = deliveryService.getDeliveriesBySenderId(userDetails.getId());
-        } else if (userDetails.getUserType().equals("RIDER")) {
-            deliveries = deliveryService.getDeliveriesByRiderId(userDetails.getId());
-        } else {
-            deliveries = List.of();
-        }
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", deliveries);
-        return ResponseEntity.ok(response);
     }
 
     // Accept a delivery (Rider only)
@@ -107,15 +45,9 @@ public class DeliveryController {
     public ResponseEntity<?> acceptDelivery(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
             Delivery delivery = deliveryService.acceptDelivery(id, userDetails.getId());
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", delivery);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("success", true, "data", delivery));
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -128,15 +60,9 @@ public class DeliveryController {
             String status = request.get("status");
             String location = request.get("location");
             Delivery delivery = deliveryService.updateDeliveryStatus(id, status, location);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", delivery);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("success", true, "data", delivery));
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -145,43 +71,13 @@ public class DeliveryController {
     public ResponseEntity<?> cancelDelivery(@PathVariable Long id) {
         try {
             Delivery delivery = deliveryService.cancelDelivery(id);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", delivery);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("success", true, "data", delivery));
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    // Get tracking history
-    @GetMapping("/{id}/track")
-    public ResponseEntity<?> getTrackingHistory(@PathVariable Long id) {
-        List<TrackingHistory> history = deliveryService.getTrackingHistory(id);
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", history);
-        return ResponseEntity.ok(response);
-    }
-
-    // Get activedelivery
-    @GetMapping("/my/active")
-    public ResponseEntity<?> getMyActiveDelivery(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        // Rider's user id -> find rider record -> find delivery with status not DELIVERED/CANCELLED and rider.id = that rider
-        List<Delivery> deliveries = deliveryService.getDeliveriesByRiderId(userDetails.getId())
-                .stream()
-                .filter(d -> !d.getStatus().equals("DELIVERED") && !d.getStatus().equals("CANCELLED"))
-                .collect(Collectors.toList());
-        Delivery active = deliveries.isEmpty() ? null : deliveries.get(0);
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", active);
-        return ResponseEntity.ok(response);
-    }
-
+    // Mark payment as collected (Rider)
     @PutMapping("/{id}/mark-paid")
     public ResponseEntity<?> markDeliveryAsPaid(@PathVariable Long id) {
         try {
@@ -192,6 +88,7 @@ public class DeliveryController {
         }
     }
 
+    // Calculate distance (utility endpoint)
     @PostMapping("/calculate-distance")
     public ResponseEntity<?> calculateDistance(@RequestBody Map<String, Object> request) {
         String origin = (String) request.get("pickupAddress");
@@ -203,17 +100,14 @@ public class DeliveryController {
         }
 
         double distanceKm = distanceService.calculateDistanceInKm(origin, destination);
-        double estimatedCost = calculateEstimatedCost(distanceKm, weight);
+        double baseFare = 50.0;
+        double perKmRate = 20.0;
+        double weightSurcharge = Math.max(0, (weight - 2) * 10);
+        double estimatedCost = baseFare + (distanceKm * perKmRate) + weightSurcharge;
 
         return ResponseEntity.ok(Map.of(
                 "distance", distanceKm,
                 "estimatedCost", estimatedCost
         ));
-    }
-    private double calculateEstimatedCost(double distanceKm, double weightKg) {
-        double baseFare = 50.0;
-        double perKmRate = 20.0;
-        double weightSurcharge = Math.max(0, (weightKg - 2) * 10);
-        return baseFare + (distanceKm * perKmRate) + weightSurcharge;
     }
 }

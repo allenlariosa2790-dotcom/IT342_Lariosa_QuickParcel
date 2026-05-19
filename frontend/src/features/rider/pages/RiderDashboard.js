@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Sidebar from '../components/layout/Sidebar';
-import { getAvailableDeliveries, acceptDelivery, getMyDeliveries, updateDeliveryStatus } from '../services/delivery';
-import api from '../services/api'; // Import api for mark-paid endpoint
+import Navbar from '../../shared/components/Navbar';
+import Sidebar from '../../shared/components/Sidebar';
+import { getAvailableDeliveries, acceptDelivery, updateDeliveryStatus, markPaymentAsPaid } from '../services/riderApi';
+import { getMyDeliveries } from '../../tracking/services/trackingApi';
 
 const RiderDashboard = () => {
   const navigate = useNavigate();
@@ -59,7 +59,6 @@ const RiderDashboard = () => {
     try {
       const response = await getMyDeliveries();
       const deliveries = Array.isArray(response.data) ? response.data : [];
-      // Active = in progress OR delivered but not yet paid
       const active = deliveries.filter(d =>
         ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'].includes(d.status) ||
         (d.status === 'DELIVERED' && d.paymentStatus !== 'PAID')

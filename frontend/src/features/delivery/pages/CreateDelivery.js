@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Sidebar from '../components/layout/Sidebar';
+import Navbar from '../../shared/components/Navbar';
+import Sidebar from '../../shared/components/Sidebar';
 import LocationPicker from '../components/LocationPicker';
 import { createDelivery, calculateDistance } from '../services/delivery';
-import { createPayMongoPayment } from '../services/payment';
-import api from '../services/api';
+import { createPayMongoPayment } from '../../payment/services/payment';
+import apiClient from '../../shared/utils/apiClient';
 
 const CreateDelivery = () => {
   const navigate = useNavigate();

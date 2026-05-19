@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Sidebar from '../components/layout/Sidebar';
-import api from '../services/api';
+import Navbar from '../../shared/components/Navbar';
+import Sidebar from '../../shared/components/Sidebar';
+import { getMyDeliveries } from '../services/trackingApi'
 
 const MyDeliveries = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -16,16 +16,16 @@ const MyDeliveries = () => {
     fetchDeliveries();
   }, []);
 
-  const fetchDeliveries = async () => {
-    try {
-      const response = await api.get('/deliveries/my');
-      setDeliveries(response.data.data);
-    } catch (err) {
-      setError('Failed to load deliveries');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchDeliveries = async () => {
+      try {
+        const response = await getMyDeliveries();
+        setDeliveries(response.data);
+      } catch (err) {
+        setError('Failed to load deliveries');
+      } finally {
+        setLoading(false);
+      }
+    };
 
   // Helper to get status badge color
   const getStatusBadge = (status) => {

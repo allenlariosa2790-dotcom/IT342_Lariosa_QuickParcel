@@ -3,7 +3,7 @@ package edu.cit.lariosa.quickparcel.features.auth;
 import edu.cit.lariosa.quickparcel.features.auth.dto.SignupRequest;
 import edu.cit.lariosa.quickparcel.features.auth.repository.UserRepository;
 import edu.cit.lariosa.quickparcel.features.auth.repository.RefreshTokenRepository;
-import edu.cit.lariosa.quickparcel.features.email.EmailService;
+import edu.cit.lariosa.quickparcel.features.email.SendGridEmailService;
 import edu.cit.lariosa.quickparcel.features.shared.entity.User;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Sender;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Rider;
@@ -40,7 +40,7 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private EmailService emailService;
+    private SendGridEmailService emailService;
 
     @Transactional
     public User registerUser(SignupRequest request) {
@@ -90,7 +90,6 @@ public class AuthService {
         // Send welcome email
         try {
             emailService.sendWelcomeEmail(user);
-            System.out.println("Welcome email sent to: " + user.getEmail());
         } catch (Exception e) {
             System.err.println("Failed to send welcome email: " + e.getMessage());
         }

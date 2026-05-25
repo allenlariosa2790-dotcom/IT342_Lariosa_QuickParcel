@@ -1,9 +1,9 @@
 package edu.cit.lariosa.quickparcel.features.delivery;
 
 import edu.cit.lariosa.quickparcel.features.delivery.dto.CreateDeliveryRequest;
+import edu.cit.lariosa.quickparcel.features.email.SendGridEmailService;
 import edu.cit.lariosa.quickparcel.features.shared.entity.*;
 import edu.cit.lariosa.quickparcel.features.delivery.repository.*;
-import edu.cit.lariosa.quickparcel.features.email.EmailService;
 import edu.cit.lariosa.quickparcel.features.shared.repository.RiderRepository;
 import edu.cit.lariosa.quickparcel.features.shared.repository.SenderRepository;
 import edu.cit.lariosa.quickparcel.features.tracking.repository.TrackingHistoryRepository;
@@ -36,7 +36,7 @@ public class DeliveryService {
     private DistanceService distanceService;
 
     @Autowired
-    private EmailService emailService;
+    private SendGridEmailService emailService;
 
     @Transactional
     public Delivery markPaymentAsPaid(Long deliveryId) {

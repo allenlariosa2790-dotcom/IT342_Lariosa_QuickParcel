@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to QuickParcel</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2563EB; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { padding: 20px; background: #f9fafb; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; background: #2563EB; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+        .footer { text-align: center; padding: 15px; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Welcome to QuickParcel!</h1>
+    </div>
+    <div class="content">
+        <h2>Hello <span th:text="${name}">User</span>!</h2>
+        <p>Thank you for joining QuickParcel – your trusted on-demand delivery partner.</p>
+        <p>Your account has been successfully created as a <strong><span th:text="${userType}">SENDER</span></strong>.</p>
+        <p>You can now:</p>
+        <ul>
+            <li>Create delivery requests</li>
+            <li>Track your packages in real-time</li>
+            <li>Connect with nearby riders</li>
+        </ul>
+        <a th:href="${loginUrl}" class="button">Login to Your Account</a>
+        <p style="margin-top: 15px;">If you have any questions, feel free to contact our support team.</p>
+    </div>
+    <div class="footer">
+        <p>&copy; <span th:text="${year}">2026</span> QuickParcel. All rights reserved.</p>
+        <p>This is an automated message, please do not reply.</p>
+    </div>
+</div>
+</body>
+</html>

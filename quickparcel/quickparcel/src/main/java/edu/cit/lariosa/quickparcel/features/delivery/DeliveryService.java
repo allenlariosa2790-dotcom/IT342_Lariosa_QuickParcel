@@ -3,7 +3,7 @@ package edu.cit.lariosa.quickparcel.features.delivery;
 import edu.cit.lariosa.quickparcel.features.delivery.dto.CreateDeliveryRequest;
 import edu.cit.lariosa.quickparcel.features.shared.entity.*;
 import edu.cit.lariosa.quickparcel.features.delivery.repository.*;
-
+import edu.cit.lariosa.quickparcel.features.email.EmailService;
 import edu.cit.lariosa.quickparcel.features.shared.repository.RiderRepository;
 import edu.cit.lariosa.quickparcel.features.shared.repository.SenderRepository;
 import edu.cit.lariosa.quickparcel.features.tracking.repository.TrackingHistoryRepository;
@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class DeliveryService {
@@ -35,6 +34,9 @@ public class DeliveryService {
 
     @Autowired
     private DistanceService distanceService;
+
+    @Autowired
+    private EmailService emailService;
 
     @Transactional
     public Delivery markPaymentAsPaid(Long deliveryId) {
@@ -98,12 +100,9 @@ public class DeliveryService {
         return baseFare + (distanceKm * perKmRate) + weightSurcharge;
     }
 
-    // Helper to generate a unique tracking number
     private String generateTrackingNumber() {
         return "QP-" + System.currentTimeMillis();
-        // Alternative: return "QP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
-
 
     public Optional<Delivery> getDeliveryById(Long id) {
         return deliveryRepository.findById(id);
@@ -147,7 +146,19 @@ public class DeliveryService {
             delivery.setDeliveredTime(LocalDateTime.now());
         }
 
-        return deliveryRepository.save(delivery);
+        Delivery savedDelivery = deliveryRepository.save(delivery);
+
+        // Send email notification to sender about status change
+        try {
+            if (delivery.getSender() != null && delivery.getSender().getUser() != null) {
+                emailService.sendDeliveryStatusUpdate(savedDelivery, delivery.getSender().getUser(), oldStatus, status);
+                System.out.println("Status update email sent to sender: " + delivery.getSender().getUser().getEmail());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send status update email: " + e.getMessage());
+        }
+
+        return savedDelivery;
     }
 
     @Transactional
@@ -169,7 +180,19 @@ public class DeliveryService {
         history.setTimestamp(LocalDateTime.now());
         trackingHistoryRepository.save(history);
 
-        return deliveryRepository.save(delivery);
+        Delivery savedDelivery = deliveryRepository.save(delivery);
+
+        // Send email notification to sender about acceptance
+        try {
+            if (delivery.getSender() != null && delivery.getSender().getUser() != null) {
+                emailService.sendDeliveryStatusUpdate(savedDelivery, delivery.getSender().getUser(), "PENDING", "ACCEPTED");
+                System.out.println("Acceptance email sent to sender: " + delivery.getSender().getUser().getEmail());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send acceptance email: " + e.getMessage());
+        }
+
+        return savedDelivery;
     }
 
     @Transactional
@@ -177,6 +200,7 @@ public class DeliveryService {
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
 
+        String oldStatus = delivery.getStatus();
         delivery.setStatus("CANCELLED");
         delivery.setUpdatedAt(LocalDateTime.now());
 
@@ -187,7 +211,19 @@ public class DeliveryService {
         history.setTimestamp(LocalDateTime.now());
         trackingHistoryRepository.save(history);
 
-        return deliveryRepository.save(delivery);
+        Delivery savedDelivery = deliveryRepository.save(delivery);
+
+        // Send email notification to sender about cancellation
+        try {
+            if (delivery.getSender() != null && delivery.getSender().getUser() != null) {
+                emailService.sendDeliveryStatusUpdate(savedDelivery, delivery.getSender().getUser(), oldStatus, "CANCELLED");
+                System.out.println("Cancellation email sent to sender: " + delivery.getSender().getUser().getEmail());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send cancellation email: " + e.getMessage());
+        }
+
+        return savedDelivery;
     }
 
     public List<TrackingHistory> getTrackingHistory(Long deliveryId) {

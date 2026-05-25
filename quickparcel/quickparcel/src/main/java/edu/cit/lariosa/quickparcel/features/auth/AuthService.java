@@ -3,6 +3,7 @@ package edu.cit.lariosa.quickparcel.features.auth;
 import edu.cit.lariosa.quickparcel.features.auth.dto.SignupRequest;
 import edu.cit.lariosa.quickparcel.features.auth.repository.UserRepository;
 import edu.cit.lariosa.quickparcel.features.auth.repository.RefreshTokenRepository;
+import edu.cit.lariosa.quickparcel.features.email.EmailService;
 import edu.cit.lariosa.quickparcel.features.shared.entity.User;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Sender;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Rider;
@@ -38,6 +39,9 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+
     @Transactional
     public User registerUser(SignupRequest request) {
         // Check if email exists
@@ -45,8 +49,8 @@ public class AuthService {
             throw new RuntimeException("Email is already in use!");
         }
 
-        // Create new user using no-args constructor
-        User user = new User();  // Now this works!
+        // Create new user
+        User user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
@@ -54,7 +58,7 @@ public class AuthService {
         user.setPhone(request.getPhone());
         user.setUserType(request.getUserType());
         user.setCreatedAt(LocalDateTime.now());
-        user.setActive(true);  // Set default active status
+        user.setActive(true);
         user = userRepository.save(user);
 
         // Create role-specific record
@@ -81,6 +85,14 @@ public class AuthService {
             admin.setUser(user);
             admin.setCreatedAt(LocalDateTime.now());
             adminRepository.save(admin);
+        }
+
+        // Send welcome email
+        try {
+            emailService.sendWelcomeEmail(user);
+            System.out.println("Welcome email sent to: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email: " + e.getMessage());
         }
 
         return user;

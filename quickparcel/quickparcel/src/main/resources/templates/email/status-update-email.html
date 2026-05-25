@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Delivery Status Update</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2563EB; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { padding: 20px; background: #f9fafb; border-radius: 0 0 10px 10px; }
+        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-old { background: #e5e7eb; color: #374151; }
+        .status-new { background: #10b981; color: white; }
+        .address { background: white; padding: 10px; border-radius: 5px; margin: 10px 0; border-left: 3px solid #2563EB; }
+        .button { display: inline-block; background: #2563EB; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+        .footer { text-align: center; padding: 15px; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Delivery Status Update</h1>
+    </div>
+    <div class="content">
+        <h2>Tracking #: <span th:text="${trackingNumber}">QP-XXXX</span></h2>
+
+        <p>Your delivery status has been updated:</p>
+        <div style="text-align: center; margin: 20px 0;">
+            <span class="status-badge status-old" th:text="${oldStatus}">OLD</span>
+            <span style="font-size: 20px;"> → </span>
+            <span class="status-badge status-new" th:text="${newStatus}">NEW</span>
+        </div>
+
+        <div class="address">
+            <strong>📍 Pickup Address:</strong><br>
+            <span th:text="${pickupAddress}">Pickup Address</span>
+        </div>
+
+        <div class="address">
+            <strong>🏁 Dropoff Address:</strong><br>
+            <span th:text="${dropoffAddress}">Dropoff Address</span>
+        </div>
+
+        <a th:href="${trackingUrl}" class="button">Track Your Delivery</a>
+    </div>
+    <div class="footer">
+        <p>&copy; <span th:text="${year}">2026</span> QuickParcel. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../shared/components/Navbar';
 import Sidebar from '../../shared/components/Sidebar';
-import { getDeliveryById, getTrackingHistory } from '../services/trackingApi';
+import { getDeliveryById, getTrackingHistory, getParcelImage } from '../services/trackingApi';
 
 const TrackingPage = () => {
   const { id } = useParams();
@@ -12,6 +12,10 @@ const TrackingPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
+  const [parcelImage, setParcelImage] = useState(null);
+  const [hasImage, setHasImage] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -24,6 +28,18 @@ const TrackingPage = () => {
     }
   }, [id]);
 
+  const fetchParcelImage = async () => {
+    try {
+      const response = await getParcelImage(id);
+      if (response.hasImage) {
+        setParcelImage(`http://localhost:8080${response.imageUrl}?t=${Date.now()}`);
+        setHasImage(true);
+      }
+    } catch (err) {
+      console.error('Failed to fetch parcel image:', err);
+    }
+  };
+
   const fetchDeliveryAndHistory = async () => {
     try {
       const [deliveryRes, historyRes] = await Promise.all([
@@ -32,11 +48,23 @@ const TrackingPage = () => {
       ]);
       setDelivery(deliveryRes.data);
       setTrackingHistory(historyRes.data || []);
+
+      await fetchParcelImage();
     } catch (err) {
       setError('Failed to load delivery details');
     } finally {
       setLoading(false);
     }
+  };
+
+  const openImageModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
+  const closeImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImage(null);
   };
 
   const getStatusBadge = (status) => {
@@ -116,9 +144,7 @@ const TrackingPage = () => {
       <div className="flex">
         <Sidebar userType={user?.userType || 'SENDER'} />
         <div className="flex-1 p-8">
-          {/* Widened from max-w-4xl to max-w-5xl (+10% width) */}
           <div className="max-w-5xl mx-auto">
-            {/* Back button */}
             <button
               onClick={() => navigate(-1)}
               className="text-[#2563EB] hover:underline mb-4 inline-block"
@@ -176,6 +202,25 @@ const TrackingPage = () => {
                   </div>
                 )}
 
+                {/* Parcel Image - Clickable */}
+                {hasImage && parcelImage && (
+                  <div className="col-span-2">
+                    <p className="text-gray-500 text-sm">Parcel Image</p>
+                    <div className="mt-2">
+                      <img
+                        src={parcelImage}
+                        alt="Parcel"
+                        className="max-w-full max-h-48 rounded-lg border shadow-sm cursor-pointer hover:opacity-90 transition-opacity object-contain bg-gray-50"
+                        onClick={() => openImageModal(parcelImage)}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Click image to enlarge</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Payment Information */}
                 {delivery.paymentMethod && (
                   <div>
@@ -230,7 +275,7 @@ const TrackingPage = () => {
               )}
             </div>
 
-            {/* Route Information - Simplified with only direction buttons */}
+            {/* Route Information */}
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-lg font-bold mb-4">Route Information</h2>
 
@@ -291,6 +336,32 @@ const TrackingPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {showImageModal && selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          onClick={closeImageModal}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <button
+              onClick={closeImageModal}
+              className="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 transition-colors"
+            >
+              ✕
+            </button>
+            <img
+              src={selectedImage}
+              alt="Parcel enlarged"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <p className="text-center text-white text-sm mt-4">
+              Click outside to close • {delivery?.trackingNumber}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

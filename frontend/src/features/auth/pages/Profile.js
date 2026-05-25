@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../shared/components/Navbar';
 import Sidebar from '../../shared/components/Sidebar';
+import ProfilePictureUpload from '../../shared/components/ProfilePictureUpload';
 import apiClient from '../../shared/utils/apiClient';
 
 const Profile = () => {
@@ -91,7 +92,6 @@ const Profile = () => {
         <Sidebar userType={user?.userType || 'SENDER'} />
         <div className="flex-1 p-8">
           <div className="max-w-2xl mx-auto">
-            {/* Header */}
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-2xl font-bold">Profile Settings</h1>
@@ -105,6 +105,17 @@ const Profile = () => {
                   Edit Profile
                 </button>
               )}
+            </div>
+
+            {/* Profile Picture Section */}
+            <div className="bg-white rounded-xl shadow-md p-6 mb-6 text-center">
+              <ProfilePictureUpload
+                userId={user?.id}
+                onUpdate={() => {
+                  // Refresh profile picture after upload
+                  setUser({ ...user });
+                }}
+              />
             </div>
 
             {/* Message Alert */}

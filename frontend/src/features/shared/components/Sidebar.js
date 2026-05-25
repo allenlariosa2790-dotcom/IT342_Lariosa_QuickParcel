@@ -46,8 +46,8 @@ const Sidebar = ({ userType }) => {
   return (
     <div className="w-64 bg-white shadow-md min-h-screen p-4">
       <div className="mb-8">
-        <h2 className="text-xl font-bold text-[#2563EB] px-4">QuickParcel</h2>
-        <p className="text-xs text-gray-400 px-4 mt-1">{userType} Portal</p>
+
+        <h2 className="text-m text-gray-400 px-4 mt-1">{userType} Portal</h2>
       </div>
 
       <nav>

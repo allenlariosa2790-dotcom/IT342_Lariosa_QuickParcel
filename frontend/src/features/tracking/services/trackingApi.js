@@ -14,3 +14,8 @@ export const getTrackingHistory = async (id) => {
   const response = await apiClient.get(`/tracking/delivery/${id}/history`);
   return response.data;
 };
+
+export const getParcelImage = async (id) => {
+  const response = await apiClient.get(`/tracking/delivery/${id}/image`);
+  return response.data;
+};

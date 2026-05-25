@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import apiClient from '../utils/apiClient';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [profilePicture, setProfilePicture] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -15,24 +17,39 @@ const Navbar = () => {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         setIsLoggedIn(true);
+        fetchProfilePicture();
       } catch (e) {
         console.error('Failed to parse user', e);
       }
     } else {
       setIsLoggedIn(false);
       setUser(null);
+      setProfilePicture(null);
     }
   }, []);
+
+  const fetchProfilePicture = async () => {
+    try {
+      const response = await apiClient.get('/upload/profile-picture');
+      if (response.data.hasPicture) {
+        setProfilePicture(`http://localhost:8080${response.data.url}?t=${Date.now()}`);
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile picture:', error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsLoggedIn(false);
     setUser(null);
+    setProfilePicture(null);
     navigate('/');
   };
 
-  const dashboardPath = user?.userType === 'RIDER' ? '/rider-dashboard' : '/sender-dashboard';
+  const dashboardPath = user?.userType === 'RIDER' ? '/rider-dashboard' :
+                        user?.userType === 'ADMIN' ? '/admin-dashboard' : '/sender-dashboard';
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -41,7 +58,6 @@ const Navbar = () => {
   const handleHomeClick = () => {
     if (location.pathname !== '/') {
       navigate('/');
-      // After navigation, scroll to top (ScrollToTop will also trigger, but this ensures)
       setTimeout(scrollToTop, 100);
     } else {
       scrollToTop();
@@ -66,12 +82,10 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            {/* Logo: goes to dashboard if logged in, else home */}
             <Link to={isLoggedIn ? dashboardPath : '/'} className="text-2xl font-bold text-[#2563EB]">
               QuickParcel
             </Link>
             <div className="hidden md:flex ml-10 space-x-8">
-              {/* Home button – always scrolls to top */}
               <button
                 onClick={handleHomeClick}
                 className="text-gray-600 hover:text-[#2563EB] transition-colors cursor-pointer"
@@ -101,7 +115,28 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             {isLoggedIn ? (
               <>
-                <span className="text-gray-700">Hello, {user?.firstName}</span>
+                <div className="flex items-center space-x-3">
+                  {/* Profile Picture */}
+                  <Link to="/profile" className="relative">
+                    {profilePicture ? (
+                      <img
+                        src={profilePicture}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-[#2563EB] hover:opacity-80 transition-opacity"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/32?text=U';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-[#2563EB] hover:bg-gray-300 transition-colors">
+                        <span className="text-sm text-gray-600">
+                          {user?.firstName?.charAt(0) || 'U'}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                  <span className="text-gray-700 hidden md:inline">Hello, {user?.firstName}</span>
+                </div>
                 <button
                   onClick={handleLogout}
                   className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"

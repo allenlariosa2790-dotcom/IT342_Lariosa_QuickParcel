@@ -27,6 +27,7 @@ const CreateDelivery = () => {
     category: '',
     isFragile: false,
     imageFile: null,
+    imagePreview: null,
   });
 
   // Step 2: Pickup & Dropoff
@@ -99,7 +100,16 @@ const CreateDelivery = () => {
   const handleParcelChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'file') {
-      setParcel({ ...parcel, imageFile: files[0] });
+      const file = files[0];
+      if (file) {
+        // Create preview URL
+        const previewUrl = URL.createObjectURL(file);
+        setParcel({
+          ...parcel,
+          imageFile: file,
+          imagePreview: previewUrl
+        });
+      }
     } else if (type === 'checkbox') {
       setParcel({ ...parcel, [name]: checked });
     } else {
@@ -130,6 +140,23 @@ const CreateDelivery = () => {
   const prevStep = () => {
     setError('');
     setStep(step - 1);
+  };
+
+  // Upload parcel image after delivery creation
+  const uploadParcelImage = async (parcelId) => {
+    if (!parcel.imageFile) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', parcel.imageFile);
+      await apiClient.post(`/upload/parcel/${parcelId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      console.log('Parcel image uploaded successfully');
+    } catch (uploadError) {
+      console.error('Failed to upload parcel image:', uploadError);
+      // Don't show error to user - delivery was already created
+    }
   };
 
   // Handle COD submission
@@ -165,7 +192,13 @@ const CreateDelivery = () => {
     };
 
     try {
-      await createDelivery(payload);
+      const response = await createDelivery(payload);
+
+      // Upload parcel image if exists
+      if (parcel.imageFile && response.data?.parcel?.id) {
+        await uploadParcelImage(response.data.parcel.id);
+      }
+
       navigate('/my-deliveries');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create delivery');
@@ -207,6 +240,12 @@ const CreateDelivery = () => {
 
     try {
       const response = await createDelivery(payload);
+
+      // Upload parcel image if exists
+      if (parcel.imageFile && response.data?.parcel?.id) {
+        await uploadParcelImage(response.data.parcel.id);
+      }
+
       setDeliveryResponse(response.data);
       setError('');
       setLoading(false);
@@ -313,10 +352,39 @@ const CreateDelivery = () => {
                   />
                   <label className="text-gray-700">Fragile – Handle with care</label>
                 </div>
+
+                {/* Image Upload with Preview */}
                 <div>
                   <label className="block text-gray-700 font-medium mb-1">Package Image (optional)</label>
-                  <input type="file" accept="image/*" onChange={handleParcelChange} />
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleParcelChange}
+                        className="w-full border rounded-lg px-4 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#2563EB] file:text-white hover:file:bg-blue-700"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Max file size: 10MB. Supports JPG, PNG, GIF</p>
+                    </div>
+                    {parcel.imagePreview && (
+                      <div className="relative">
+                        <img
+                          src={parcel.imagePreview}
+                          alt="Preview"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setParcel({ ...parcel, imageFile: null, imagePreview: null })}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
                 <div className="flex justify-end">
                   <button type="button" onClick={nextStep} className="bg-[#2563EB] text-white px-6 py-2 rounded-lg">
                     Next →
@@ -393,6 +461,11 @@ const CreateDelivery = () => {
                 <h3 className="text-lg font-bold">Review Your Delivery</h3>
                 <div className="border rounded-lg p-4 space-y-2 bg-gray-50">
                   <p><strong>Parcel:</strong> {parcel.name} ({parcel.size}, {parcel.weight} kg)</p>
+                  {parcel.imagePreview && (
+                    <div className="mt-2">
+                      <img src={parcel.imagePreview} alt="Parcel preview" className="w-24 h-24 object-cover rounded-lg" />
+                    </div>
+                  )}
                   <p><strong>From:</strong> {pickup.address}</p>
                   <p><strong>To:</strong> {dropoff.address}</p>
                   <p><strong>Scheduled:</strong> {scheduledTime ? new Date(scheduledTime).toLocaleString() : 'Not set'}</p>

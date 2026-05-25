@@ -17,6 +17,11 @@ public class CreateDeliveryRequest {
     @NotBlank(message = "Dropoff address is required")
     private String dropoffAddress;
 
+    private Double pickupLatitude;
+    private Double pickupLongitude;
+    private Double dropoffLatitude;
+    private Double dropoffLongitude;
+
     private String notes;
     private LocalDateTime scheduledTime;
 
@@ -44,6 +49,39 @@ public class CreateDeliveryRequest {
 
     public String getPaymentStatus(){return paymentStatus;}
     public void setPaymentStatus(String paymentStatus){this.paymentStatus = paymentStatus;}
+
+    public Double getPickupLatitude() {
+        return pickupLatitude;
+    }
+
+    public void setPickupLatitude(Double pickupLatitude) {
+        this.pickupLatitude = pickupLatitude;
+    }
+
+    public Double getPickupLongitude() {
+        return pickupLongitude;
+    }
+
+    public void setPickupLongitude(Double pickupLongitude) {
+        this.pickupLongitude = pickupLongitude;
+    }
+
+    public Double getDropoffLatitude() {
+        return dropoffLatitude;
+    }
+
+    public void setDropoffLatitude(Double dropoffLatitude) {
+        this.dropoffLatitude = dropoffLatitude;
+    }
+
+    public Double getDropoffLongitude() {
+        return dropoffLongitude;
+    }
+
+    public void setDropoffLongitude(Double dropoffLongitude) {
+        this.dropoffLongitude = dropoffLongitude;
+    }
+
     // Inner class for parcel details
     public static class ParcelInfo {
         @NotBlank(message = "Parcel name is required")
@@ -80,5 +118,7 @@ public class CreateDeliveryRequest {
 
         public Boolean getIsFragile() { return isFragile; }
         public void setIsFragile(Boolean isFragile) { this.isFragile = isFragile; }
+
+
     }
 }

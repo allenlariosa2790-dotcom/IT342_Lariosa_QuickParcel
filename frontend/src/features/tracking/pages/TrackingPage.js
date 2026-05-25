@@ -13,31 +13,31 @@ const TrackingPage = () => {
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
 
-    useEffect(() => {
-      const userData = localStorage.getItem('user');
-      if (userData) setUser(JSON.parse(userData));
-      if (id) {
-        fetchDeliveryAndHistory();
-      } else {
-        setError('No delivery ID provided');
-        setLoading(false);
-      }
-    }, [id]);
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) setUser(JSON.parse(userData));
+    if (id) {
+      fetchDeliveryAndHistory();
+    } else {
+      setError('No delivery ID provided');
+      setLoading(false);
+    }
+  }, [id]);
 
-    const fetchDeliveryAndHistory = async () => {
-      try {
-        const [deliveryRes, historyRes] = await Promise.all([
-          getDeliveryById(id),
-          getTrackingHistory(id)
-        ]);
-        setDelivery(deliveryRes.data);
-        setTrackingHistory(historyRes.data || []);
-      } catch (err) {
-        setError('Failed to load delivery details');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchDeliveryAndHistory = async () => {
+    try {
+      const [deliveryRes, historyRes] = await Promise.all([
+        getDeliveryById(id),
+        getTrackingHistory(id)
+      ]);
+      setDelivery(deliveryRes.data);
+      setTrackingHistory(historyRes.data || []);
+    } catch (err) {
+      setError('Failed to load delivery details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -116,7 +116,8 @@ const TrackingPage = () => {
       <div className="flex">
         <Sidebar userType={user?.userType || 'SENDER'} />
         <div className="flex-1 p-8">
-          <div className="max-w-4xl mx-auto">
+          {/* Widened from max-w-4xl to max-w-5xl (+10% width) */}
+          <div className="max-w-5xl mx-auto">
             {/* Back button */}
             <button
               onClick={() => navigate(-1)}
@@ -229,12 +230,63 @@ const TrackingPage = () => {
               )}
             </div>
 
-            {/* Map placeholder */}
+            {/* Route Information - Simplified with only direction buttons */}
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-lg font-bold mb-4">Route Map</h2>
-              <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">Map view will be available soon</p>
-              </div>
+              <h2 className="text-lg font-bold mb-4">Route Information</h2>
+
+              {delivery.pickupLatitude && delivery.pickupLongitude && delivery.dropoffLatitude && delivery.dropoffLongitude ? (
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <p className="text-gray-700 mb-3 text-center">📍 Get directions for this delivery:</p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <a
+                      href={`https://www.google.com/maps/dir/${delivery.pickupLatitude},${delivery.pickupLongitude}/${delivery.dropoffLatitude},${delivery.dropoffLongitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                    >
+                      <span>📍</span> Google Maps
+                    </a>
+                    <a
+                      href={`https://www.openstreetmap.org/directions?engine=osrm_car&route=${delivery.pickupLatitude},${delivery.pickupLongitude}&to=${delivery.dropoffLatitude},${delivery.dropoffLongitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#2563EB] text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <span>🗺️</span> OpenStreetMap
+                    </a>
+                    <a
+                      href={`https://waze.com/ul?ll=${delivery.pickupLatitude},${delivery.pickupLongitude}&navigate=yes`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                    >
+                      <span>🚗</span> Waze
+                    </a>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center mt-3">
+                    Click any button to open directions in your preferred app
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-gray-100 rounded-lg p-4 text-center">
+                  <p className="text-gray-500">📍 Location coordinates not available for directions</p>
+                  <p className="text-sm text-gray-400 mt-1">Coordinates will be available when using the location picker</p>
+                </div>
+              )}
+
+              {/* Distance Info */}
+              {delivery.distance && (
+                <div className="mt-4 bg-gray-100 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600">
+                    📏 Total Distance: <span className="font-bold">{delivery.distance.toFixed(2)} km</span>
+                  </p>
+                  {delivery.estimatedCost && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      💰 Estimated Cost: <span className="font-bold text-[#2563EB]">₱{delivery.estimatedCost.toFixed(2)}</span>
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

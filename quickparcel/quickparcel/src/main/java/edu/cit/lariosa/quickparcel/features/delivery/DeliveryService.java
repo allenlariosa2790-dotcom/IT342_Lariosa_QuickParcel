@@ -73,6 +73,10 @@ public class DeliveryService {
         delivery.setCreatedAt(LocalDateTime.now());
         delivery.setPaymentMethod(request.getPaymentMethod());
         delivery.setPaymentStatus(request.getPaymentStatus());
+        delivery.setPickupLatitude(request.getPickupLatitude());
+        delivery.setPickupLongitude(request.getPickupLongitude());
+        delivery.setDropoffLatitude(request.getDropoffLatitude());
+        delivery.setDropoffLongitude(request.getDropoffLongitude());
 
         // Calculate real distance and cost
         double distanceKm = distanceService.calculateDistanceInKm(

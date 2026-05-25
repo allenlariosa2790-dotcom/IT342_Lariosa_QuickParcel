@@ -16,6 +16,7 @@ import PaymentSuccess from './features/payment/pages/PaymentSuccess';
 import PaymentCancel from './features/payment/pages/PaymentCancel';
 import PaymentsPage from './features/payment/pages/PaymentsPage';
 import ReceiptPage from './features/payment/pages/ReceiptPage';
+import ChangePassword from './features/auth/pages/ChangePassword';
 
 // Protected Route Component - must be used with element prop
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -70,6 +71,13 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/change-password" element={
+          <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+            <ChangePassword />
+          </ProtectedRoute>
+        } />
+
         <Route
           path="/available-deliveries"
           element={

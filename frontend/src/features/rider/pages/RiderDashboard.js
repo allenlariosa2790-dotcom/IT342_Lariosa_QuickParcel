@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../shared/components/Navbar';
 import Sidebar from '../../shared/components/Sidebar';
 import apiClient from '../../shared/utils/apiClient';
-import { getAvailableDeliveries, acceptDelivery, updateDeliveryStatus, markPaymentAsPaid } from '../services/riderApi';
+import { getAvailableDeliveries, acceptDelivery, updateDeliveryStatus } from '../services/riderApi';
 import { getMyDeliveries } from '../../tracking/services/trackingApi';
 
 const RiderDashboard = () => {
@@ -13,6 +13,25 @@ const RiderDashboard = () => {
   const [availableDeliveries, setAvailableDeliveries] = useState([]);
   const [activeDeliveries, setActiveDeliveries] = useState([]);
   const [updating, setUpdating] = useState(false);
+
+  const [earnings, setEarnings] = useState({
+    today: 0,
+    thisWeek: 0,
+    lastWeek: 0,
+    total: 0,
+    completedCount: 0,
+  });
+
+  // Weekly earnings data for chart
+  const [weeklyData, setWeeklyData] = useState([
+    { day: 'Mon', earnings: 0, deliveries: 0 },
+    { day: 'Tue', earnings: 0, deliveries: 0 },
+    { day: 'Wed', earnings: 0, deliveries: 0 },
+    { day: 'Thu', earnings: 0, deliveries: 0 },
+    { day: 'Fri', earnings: 0, deliveries: 0 },
+    { day: 'Sat', earnings: 0, deliveries: 0 },
+    { day: 'Sun', earnings: 0, deliveries: 0 },
+  ]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -28,7 +47,7 @@ const RiderDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchAvailableDeliveries(), fetchActiveDeliveries()]);
+      await Promise.all([fetchAvailableDeliveries(), fetchActiveDeliveries(), fetchEarnings(), fetchWeeklyStats()]);
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
@@ -46,8 +65,6 @@ const RiderDashboard = () => {
         deliveries = response.data.deliveries;
       } else if (response.data && Array.isArray(response.data.content)) {
         deliveries = response.data.content;
-      } else {
-        console.warn('Unexpected response structure:', response.data);
       }
       setAvailableDeliveries(deliveries);
     } catch (err) {
@@ -71,13 +88,89 @@ const RiderDashboard = () => {
     }
   };
 
+  const fetchEarnings = async () => {
+    try {
+      const response = await getMyDeliveries();
+      const deliveries = Array.isArray(response.data) ? response.data : [];
+
+      const completed = deliveries.filter(d => d.status === 'DELIVERED');
+      const totalEarnings = completed.reduce((sum, d) => sum + (d.estimatedCost || 0), 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayEarnings = completed
+        .filter(d => new Date(d.deliveredTime || d.updatedAt || d.createdAt) >= today)
+        .reduce((sum, d) => sum + (d.estimatedCost || 0), 0);
+
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const weekEarnings = completed
+        .filter(d => new Date(d.deliveredTime || d.updatedAt || d.createdAt) >= weekAgo)
+        .reduce((sum, d) => sum + (d.estimatedCost || 0), 0);
+
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      const lastWeekEarnings = completed
+        .filter(d => {
+          const date = new Date(d.deliveredTime || d.updatedAt || d.createdAt);
+          return date >= twoWeeksAgo && date < weekAgo;
+        })
+        .reduce((sum, d) => sum + (d.estimatedCost || 0), 0);
+
+      setEarnings({
+        today: todayEarnings,
+        thisWeek: weekEarnings,
+        lastWeek: lastWeekEarnings,
+        total: totalEarnings,
+        completedCount: completed.length,
+      });
+    } catch (err) {
+      console.error('Failed to fetch earnings:', err);
+    }
+  };
+
+  const fetchWeeklyStats = async () => {
+    try {
+      const response = await getMyDeliveries();
+      const deliveries = Array.isArray(response.data) ? response.data : [];
+      const completed = deliveries.filter(d => d.status === 'DELIVERED');
+
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const weeklyTotals = {};
+      dayNames.forEach(day => { weeklyTotals[day] = { earnings: 0, deliveries: 0 }; });
+
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      completed.forEach(delivery => {
+        const date = new Date(delivery.deliveredTime || delivery.updatedAt || delivery.createdAt);
+        if (date >= oneWeekAgo) {
+          const dayName = dayNames[date.getDay()];
+          weeklyTotals[dayName].earnings += delivery.estimatedCost || 0;
+          weeklyTotals[dayName].deliveries += 1;
+        }
+      });
+
+      const orderedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const chartData = orderedDays.map(day => ({
+        day,
+        earnings: weeklyTotals[day]?.earnings || 0,
+        deliveries: weeklyTotals[day]?.deliveries || 0,
+      }));
+
+      setWeeklyData(chartData);
+    } catch (err) {
+      console.error('Failed to fetch weekly stats:', err);
+    }
+  };
+
   const handleAccept = async (deliveryId) => {
     try {
       await acceptDelivery(deliveryId);
       await Promise.all([fetchAvailableDeliveries(), fetchActiveDeliveries()]);
-      alert('Delivery accepted!');
+      alert('✅ Delivery accepted!');
     } catch (error) {
-      alert('Accept failed');
+      alert('❌ Accept failed');
     }
   };
 
@@ -85,11 +178,10 @@ const RiderDashboard = () => {
     setUpdating(true);
     try {
       await updateDeliveryStatus(deliveryId, newStatus, 'Current location');
-      await fetchActiveDeliveries();
-      await fetchAvailableDeliveries();
-      alert(`Status updated to ${newStatus}`);
+      await Promise.all([fetchActiveDeliveries(), fetchAvailableDeliveries(), fetchEarnings(), fetchWeeklyStats()]);
+      alert(`✅ Status updated to ${newStatus}`);
     } catch (error) {
-      alert('Failed to update status');
+      alert('❌ Failed to update status');
     } finally {
       setUpdating(false);
     }
@@ -98,13 +190,20 @@ const RiderDashboard = () => {
   const markPaymentAsPaid = async (deliveryId) => {
     try {
       await apiClient.put(`/deliveries/${deliveryId}/mark-paid`);
-      alert('Payment marked as collected!');
-      await fetchActiveDeliveries(); // refresh to update payment status
+      alert('💰 Payment marked as collected!');
+      await fetchActiveDeliveries();
     } catch (err) {
       console.error('Failed to mark payment:', err);
-      alert('Failed to update payment status');
+      alert('❌ Failed to update payment status');
     }
   };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount || 0);
+  };
+
+  // Find max earnings for chart scaling
+  const maxEarnings = Math.max(...weeklyData.map(d => d.earnings), 100);
 
   if (loading) {
     return (
@@ -125,23 +224,91 @@ const RiderDashboard = () => {
         <div className="flex-1 p-8">
           {/* Welcome Banner */}
           <div className="bg-gradient-to-r from-[#2563EB] to-blue-700 text-white rounded-xl p-6 mb-8">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
               <div>
                 <h1 className="text-2xl font-bold">Welcome back, {user?.firstName || 'Rider'}!</h1>
                 <p className="opacity-90 mt-1">Ready to earn today?</p>
               </div>
               <div className="bg-white text-[#2563EB] px-4 py-2 rounded-lg font-semibold">
-                Today's Earnings: $42
+                {formatCurrency(earnings.today)} Today
               </div>
             </div>
           </div>
 
-          {/* Map placeholder */}
-          <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-            <h3 className="text-lg font-bold mb-4">Delivery Hotspots</h3>
-            <div className="bg-gray-100 h-48 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">Map showing available delivery hotspots</p>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white rounded-xl shadow-md p-4 text-center">
+              <p className="text-2xl font-bold text-[#2563EB]">{earnings.completedCount}</p>
+              <p className="text-sm text-gray-500">Completed Deliveries</p>
             </div>
+            <div className="bg-white rounded-xl shadow-md p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(earnings.thisWeek)}</p>
+              <p className="text-sm text-gray-500">This Week</p>
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-4 text-center">
+              <p className="text-2xl font-bold text-blue-600">{formatCurrency(earnings.lastWeek)}</p>
+              <p className="text-sm text-gray-500">Last Week</p>
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-4 text-center">
+              <p className="text-2xl font-bold text-[#2563EB]">{formatCurrency(earnings.total)}</p>
+              <p className="text-sm text-gray-500">Total Earnings</p>
+            </div>
+          </div>
+
+          {/* Weekly Earnings Chart - Replaces the map placeholder */}
+          <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Weekly Earnings Overview</h3>
+              <div className="flex gap-4 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-[#2563EB] rounded"></div>
+                  <span>Earnings (₱)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                  <span>Deliveries</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bar Chart */}
+            <div className="h-64">
+              <div className="flex h-full items-end gap-2">
+                {weeklyData.map((day, idx) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="relative w-full flex flex-col items-center">
+                      {/* Earnings Bar */}
+                      <div
+                        className="w-full bg-[#2563EB] rounded-t transition-all duration-500 hover:bg-blue-600"
+                        style={{
+                          height: `${(day.earnings / maxEarnings) * 150}px`,
+                          minHeight: day.earnings > 0 ? '4px' : '0px'
+                        }}
+                      >
+                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-[#2563EB] whitespace-nowrap">
+                          {day.earnings > 0 ? formatCurrency(day.earnings) : ''}
+                        </div>
+                      </div>
+                      {/* Deliveries indicator dot */}
+                      {day.deliveries > 0 && (
+                        <div className="absolute -bottom-4 w-2 h-2 bg-green-500 rounded-full"></div>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-4">{day.day}</div>
+                    {day.deliveries > 0 && (
+                      <div className="text-xs text-green-600">{day.deliveries} delivery{day.deliveries !== 1 ? 's' : ''}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {weeklyData.every(d => d.earnings === 0) && (
+              <div className="text-center text-gray-500 py-8">
+                <p>No earnings data for this week yet.</p>
+                <p className="text-sm mt-1">Complete deliveries to see your earnings chart!</p>
+              </div>
+            )}
           </div>
 
           {/* Available Deliveries */}
@@ -155,9 +322,13 @@ const RiderDashboard = () => {
                 View All
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availableDeliveries.length === 0 ? (
-                <p className="text-gray-500 col-span-3">No deliveries available at the moment.</p>
+                <div className="bg-white rounded-xl shadow-md p-8 text-center text-gray-500 col-span-full">
+                  <div className="text-4xl mb-2">🚗</div>
+                  <p>No deliveries available at the moment.</p>
+                  <p className="text-sm mt-1">Check back later for new deliveries.</p>
+                </div>
               ) : (
                 availableDeliveries.slice(0, 3).map((delivery) => (
                   <div key={delivery.id} className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
@@ -168,20 +339,20 @@ const RiderDashboard = () => {
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 mb-2">
-                      <div>From: {delivery.pickupAddress}</div>
-                      <div>To: {delivery.dropoffAddress}</div>
+                      <div className="truncate">From: {delivery.pickupAddress}</div>
+                      <div className="truncate">To: {delivery.dropoffAddress}</div>
                     </div>
                     <div className="flex justify-between text-sm mb-3">
                       <span>📍 {delivery.distance ? `${delivery.distance.toFixed(2)} km` : 'Distance pending'}</span>
                       <span className="font-semibold text-[#2563EB]">
-                        ₱{delivery.estimatedCost?.toFixed(2) || '0.00'}
+                        {formatCurrency(delivery.estimatedCost)}
                       </span>
                     </div>
                     <button
                       onClick={() => handleAccept(delivery.id)}
                       className="w-full bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                     >
-                      Accept
+                      Accept Delivery
                     </button>
                   </div>
                 ))
@@ -189,64 +360,73 @@ const RiderDashboard = () => {
             </div>
           </div>
 
-          {/* Active Deliveries (Multiple) */}
+          {/* Active Deliveries */}
           {activeDeliveries.length > 0 && (
             <div className="mb-8">
               <h3 className="text-lg font-bold mb-4">Your Active Deliveries ({activeDeliveries.length})</h3>
               <div className="space-y-4">
                 {activeDeliveries.map((delivery) => (
-                  <div key={delivery.id} className="bg-white rounded-xl shadow-md p-6">
+                  <div key={delivery.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
                     <div className="border-l-4 border-[#2563EB] pl-4">
-                      <div className="flex justify-between items-start">
-                        <div>
+                      <div className="flex justify-between items-start flex-wrap gap-4">
+                        <div className="flex-1">
                           <div className="font-semibold text-lg">{delivery.trackingNumber}</div>
                           <div className="text-sm text-gray-600 mb-2">
-                            {delivery.pickupAddress} → {delivery.dropoffAddress}
+                            <div>From: {delivery.pickupAddress}</div>
+                            <div>To: {delivery.dropoffAddress}</div>
                           </div>
-                          <div className="text-sm text-green-600 mb-2">Status: {delivery.status}</div>
-                          {delivery.paymentMethod && (
-                            <div className="text-sm text-gray-600">
-                              Payment: {delivery.paymentMethod} -{' '}
-                              <span className={delivery.paymentStatus === 'PAID' ? 'text-green-600' : 'text-yellow-600'}>
-                                {delivery.paymentStatus || 'PENDING'}
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              delivery.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-800' :
+                              delivery.status === 'PICKED_UP' ? 'bg-purple-100 text-purple-800' :
+                              delivery.status === 'IN_TRANSIT' ? 'bg-indigo-100 text-indigo-800' :
+                              delivery.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {delivery.status}
+                            </span>
+                            {delivery.paymentMethod && (
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                delivery.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {delivery.paymentMethod} - {delivery.paymentStatus || 'PENDING'}
                               </span>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-[#2563EB]">₱{delivery.estimatedCost?.toFixed(2)}</div>
+                          <div className="font-bold text-xl text-[#2563EB]">{formatCurrency(delivery.estimatedCost)}</div>
                           <div className="text-xs text-gray-500">{delivery.distance?.toFixed(2)} km</div>
                         </div>
                       </div>
-                      <div className="flex gap-2 mt-3 flex-wrap">
+                      <div className="flex gap-2 mt-4 flex-wrap">
                         <button
                           onClick={() => handleStatusUpdate(delivery.id, 'PICKED_UP')}
                           disabled={updating || delivery.status !== 'ACCEPTED'}
-                          className="bg-yellow-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                          className="bg-yellow-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-50 hover:bg-yellow-600 transition-colors"
                         >
-                          Picked Up
+                          📦 Picked Up
                         </button>
                         <button
                           onClick={() => handleStatusUpdate(delivery.id, 'IN_TRANSIT')}
                           disabled={updating || delivery.status !== 'PICKED_UP'}
-                          className="bg-blue-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                          className="bg-blue-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-50 hover:bg-blue-600 transition-colors"
                         >
-                          In Transit
+                          🚚 In Transit
                         </button>
                         <button
                           onClick={() => handleStatusUpdate(delivery.id, 'DELIVERED')}
                           disabled={updating || delivery.status !== 'IN_TRANSIT'}
-                          className="bg-green-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                          className="bg-green-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-50 hover:bg-green-600 transition-colors"
                         >
-                          Delivered
+                          ✅ Delivered
                         </button>
-                        {/* COD Payment Button – only show if payment method is COD and not yet paid */}
                         {delivery.paymentMethod === 'COD' && delivery.paymentStatus !== 'PAID' && (
                           <button
                             onClick={() => markPaymentAsPaid(delivery.id)}
-                            className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                            className="bg-purple-600 text-white px-3 py-1.5 rounded text-sm hover:bg-purple-700 transition-colors"
                           >
-                            Confirm Payment Collected
+                            💰 Confirm Payment
                           </button>
                         )}
                       </div>
@@ -256,25 +436,6 @@ const RiderDashboard = () => {
               </div>
             </div>
           )}
-
-          {/* Earnings Summary */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold mb-4">Earnings This Week</h3>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-3xl font-bold text-[#2563EB]">$342</p>
-                <p className="text-sm text-gray-500">This week</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-semibold">$298</p>
-                <p className="text-sm text-gray-500">Last week</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-semibold">$48</p>
-                <p className="text-sm text-gray-500">Average/day</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

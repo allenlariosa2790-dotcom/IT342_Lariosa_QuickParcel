@@ -6,7 +6,7 @@ import edu.cit.lariosa.quickparcel.features.auth.dto.JwtResponse;
 import edu.cit.lariosa.quickparcel.features.auth.dto.MessageResponse;
 import edu.cit.lariosa.quickparcel.features.auth.repository.UserRepository;
 import edu.cit.lariosa.quickparcel.features.auth.JwtUtils;
-import edu.cit.lariosa.quickparcel.features.auth.UserDetailsServiceImpl;
+import edu.cit.lariosa.quickparcel.features.auth.UserDetailsImpl;
 import edu.cit.lariosa.quickparcel.features.shared.entity.User;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -16,8 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -33,7 +37,38 @@ public class AuthController {
     private AuthService authService;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     JwtUtils jwtUtils;
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                           @RequestBody Map<String, String> request) {
+        try {
+            User user = userRepository.findById(userDetails.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (request.containsKey("firstName")) {
+                user.setFirstName(request.get("firstName"));
+            }
+            if (request.containsKey("lastName")) {
+                user.setLastName(request.get("lastName"));
+            }
+            if (request.containsKey("phone")) {
+                user.setPhone(request.get("phone"));
+            }
+
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Profile updated successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {

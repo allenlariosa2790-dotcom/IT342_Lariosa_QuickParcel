@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ userType }) => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = userType === 'SENDER' ? [
     { path: '/sender-dashboard', label: 'Dashboard', icon: '📊' },
@@ -18,15 +19,20 @@ const Sidebar = ({ userType }) => {
     { path: '/profile', label: 'Profile', icon: '👤' },
   ];
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   return (
     <div className="w-64 bg-white shadow-md min-h-screen p-4">
+      {/* Removed search bar */}
       <div className="mb-8">
-        <input
-          type="search"
-          placeholder="Search..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none"
-        />
+        <h2 className="text-xl font-bold text-[#2563EB] px-4">QuickParcel</h2>
+        <p className="text-xs text-gray-400 px-4 mt-1">{userType} Portal</p>
       </div>
+
       <nav>
         <ul className="space-y-2">
           {menuItems.map((item) => (
@@ -45,13 +51,13 @@ const Sidebar = ({ userType }) => {
             </li>
           ))}
           <li className="pt-4 mt-4 border-t">
-            <Link
-              to="/logout"
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 transition-all duration-300"
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 transition-all duration-300"
             >
               <span>🚪</span>
               <span>Logout</span>
-            </Link>
+            </button>
           </li>
         </ul>
       </nav>

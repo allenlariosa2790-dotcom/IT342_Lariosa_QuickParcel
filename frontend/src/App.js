@@ -15,6 +15,7 @@ import Earnings from './features/rider/pages/Earnings';
 import PaymentSuccess from './features/payment/pages/PaymentSuccess';
 import PaymentCancel from './features/payment/pages/PaymentCancel';
 import PaymentsPage from './features/payment/pages/PaymentsPage';
+import ReceiptPage from './features/payment/pages/ReceiptPage';
 
 // Protected Route Component - must be used with element prop
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -123,6 +124,11 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/receipt/:id" element={
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+                <ReceiptPage />
+            </ProtectedRoute>
+        } />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" />} />

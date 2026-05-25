@@ -57,6 +57,42 @@ const TrackingPage = () => {
     }
   };
 
+  // Helper function to get short address (first part only)
+  const getShortAddress = (address) => {
+    if (!address) return null;
+    // Get first part before comma (street/city name)
+    const parts = address.split(',');
+    return parts[0] || address;
+  };
+
+  // Get meaningful location text based on status
+  const getLocationText = (track, delivery) => {
+    // If a real location is provided, use it
+    if (track.location && track.location !== 'Current location') {
+      return track.location;
+    }
+
+    // Otherwise generate based on status
+    switch (track.status) {
+      case 'ACCEPTED':
+        return 'Delivery accepted by rider';
+      case 'PICKED_UP':
+        const pickupShort = getShortAddress(delivery?.pickupAddress);
+        return pickupShort ? `Picked up from: ${pickupShort}` : 'Package picked up';
+      case 'IN_TRANSIT':
+        return 'Package is on the way to destination';
+      case 'DELIVERED':
+        const dropoffShort = getShortAddress(delivery?.dropoffAddress);
+        return dropoffShort ? `Delivered to: ${dropoffShort}` : 'Package delivered successfully';
+      case 'PENDING':
+        return 'Waiting for rider to accept';
+      case 'CANCELLED':
+        return 'Delivery cancelled';
+      default:
+        return track.location || 'Status updated';
+    }
+  };
+
   const openImageModal = (imageUrl) => {
     setSelectedImage(imageUrl);
     setShowImageModal(true);
@@ -202,7 +238,7 @@ const TrackingPage = () => {
                   </div>
                 )}
 
-                {/* Parcel Image - Clickable */}
+                {/* Parcel Image */}
                 {hasImage && parcelImage && (
                   <div className="col-span-2">
                     <p className="text-gray-500 text-sm">Parcel Image</p>
@@ -246,7 +282,7 @@ const TrackingPage = () => {
               </div>
             </div>
 
-            {/* Tracking history timeline */}
+            {/* Tracking history timeline with improved location text */}
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <h2 className="text-lg font-bold mb-4">Tracking History</h2>
               {trackingHistory.length === 0 ? (
@@ -255,21 +291,23 @@ const TrackingPage = () => {
                 <div className="relative">
                   <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   <div className="space-y-6">
-                    {trackingHistory.map((track, idx) => (
-                      <div key={track.id || idx} className="relative pl-10">
-                        <div className="absolute left-0 top-1 w-8 h-8 rounded-full bg-white border-2 border-[#2563EB] flex items-center justify-center">
-                          <div className="w-2 h-2 bg-[#2563EB] rounded-full"></div>
+                    {trackingHistory.map((track, idx) => {
+                      const locationText = getLocationText(track, delivery);
+                      return (
+                        <div key={track.id || idx} className="relative pl-10">
+                          <div className="absolute left-0 top-1 w-8 h-8 rounded-full bg-white border-2 border-[#2563EB] flex items-center justify-center">
+                            <div className="w-2 h-2 bg-[#2563EB] rounded-full"></div>
+                          </div>
+                          <div>
+                            <p className="font-semibold">{track.status}</p>
+                            <p className="text-sm text-gray-500">
+                              📍 {locationText} • {track.timestamp ? new Date(track.timestamp).toLocaleString() : 'N/A'}
+                            </p>
+                            {track.notes && <p className="text-sm text-gray-600 mt-1">{track.notes}</p>}
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold">{track.status}</p>
-                          <p className="text-sm text-gray-500">
-                            {track.location && `📍 ${track.location} • `}
-                            {track.timestamp ? new Date(track.timestamp).toLocaleString() : 'N/A'}
-                          </p>
-                          {track.notes && <p className="text-sm text-gray-600 mt-1">{track.notes}</p>}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

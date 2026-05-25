@@ -20,18 +20,25 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Call login API
       const response = await login({ email, password });
       console.log('Login successful:', response);
+
+      // CRITICAL: Check if the user's role matches the selected tab
+      if (response.userType !== role) {
+        const expectedRole = role === 'SENDER' ? 'Sender' : 'Rider';
+        const actualRole = response.userType === 'SENDER' ? 'Sender' : 'Rider';
+        setError(`This account is registered as a ${actualRole}. Please use the ${actualRole} login tab.`);
+        setLoading(false);
+        return;
+      }
 
       // Store token and user data
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response));
 
-      // Show success message
       setSuccess('Login successful! Redirecting...');
 
-      // Redirect based on user role after 1.5 seconds
+      // Redirect based on user role
       setTimeout(() => {
         if (response.userType === 'SENDER') {
           navigate('/sender-dashboard');
@@ -59,7 +66,6 @@ const Login = () => {
             <p className="text-gray-600 mt-2">Log in to your account</p>
           </div>
 
-          {/* Success Message */}
           {success && (
             <div className="mb-4 p-3 bg-green-500 text-white rounded-lg animate-pulse">
               {success}

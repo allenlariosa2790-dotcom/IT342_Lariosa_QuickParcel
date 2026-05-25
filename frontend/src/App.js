@@ -17,6 +17,10 @@ import PaymentCancel from './features/payment/pages/PaymentCancel';
 import PaymentsPage from './features/payment/pages/PaymentsPage';
 import ReceiptPage from './features/payment/pages/ReceiptPage';
 import ChangePassword from './features/auth/pages/ChangePassword';
+import AdminDashboard from './features/admin/pages/AdminDashboard';
+import AdminUsers from './features/admin/pages/AdminUsers';
+import AdminDeliveries from './features/admin/pages/AdminDeliveries';
+import AdminProfile from './features/admin/pages/AdminProfile';
 
 // Protected Route Component - must be used with element prop
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -58,6 +62,41 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['SENDER']}>
               <CreateDelivery />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/deliveries"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminDeliveries />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminProfile />
             </ProtectedRoute>
           }
         />

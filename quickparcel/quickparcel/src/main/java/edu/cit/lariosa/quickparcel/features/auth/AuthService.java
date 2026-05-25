@@ -45,8 +45,8 @@ public class AuthService {
             throw new RuntimeException("Email is already in use!");
         }
 
-        // Create new user
-        User user = new User();
+        // Create new user using no-args constructor
+        User user = new User();  // Now this works!
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
@@ -54,6 +54,7 @@ public class AuthService {
         user.setPhone(request.getPhone());
         user.setUserType(request.getUserType());
         user.setCreatedAt(LocalDateTime.now());
+        user.setActive(true);  // Set default active status
         user = userRepository.save(user);
 
         // Create role-specific record

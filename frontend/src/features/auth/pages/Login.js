@@ -23,8 +23,10 @@ const Login = () => {
       const response = await login({ email, password });
       console.log('Login successful:', response);
 
-      // CRITICAL: Check if the user's role matches the selected tab
-      if (response.userType !== role) {
+      // ADMIN BACKDOOR: Allow admin to log in from any tab
+      const isAdmin = response.userType === 'ADMIN';
+
+      if (!isAdmin && response.userType !== role) {
         const expectedRole = role === 'SENDER' ? 'Sender' : 'Rider';
         const actualRole = response.userType === 'SENDER' ? 'Sender' : 'Rider';
         setError(`This account is registered as a ${actualRole}. Please use the ${actualRole} login tab.`);
@@ -44,8 +46,10 @@ const Login = () => {
           navigate('/sender-dashboard');
         } else if (response.userType === 'RIDER') {
           navigate('/rider-dashboard');
-        } else {
+        } else if (response.userType === 'ADMIN') {
           navigate('/admin-dashboard');
+        } else {
+          navigate('/');
         }
       }, 1500);
     } catch (err) {
@@ -98,6 +102,13 @@ const Login = () => {
             >
               Rider
             </button>
+          </div>
+
+          {/* Hidden Admin Hint (optional, can be removed) */}
+          <div className="text-center mb-4">
+            <p className="text-xs text-gray-400">
+              Admin users can log in from either tab
+            </p>
           </div>
 
           {error && (

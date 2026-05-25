@@ -34,9 +34,16 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Constructors
-    public User() {}
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 
+    // ===== CONSTRUCTORS =====
+
+    // No-args constructor (REQUIRED by JPA)
+    public User() {
+    }
+
+    // Parameterized constructor (optional, for convenience)
     public User(String email, String passwordHash, String firstName, String lastName, String userType) {
         this.email = email;
         this.passwordHash = passwordHash;
@@ -44,6 +51,8 @@ public class User {
         this.lastName = lastName;
         this.userType = userType;
     }
+
+    // ===== LIFECYCLE CALLBACKS =====
 
     @PrePersist
     protected void onCreate() {
@@ -55,7 +64,8 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
+    // ===== GETTERS AND SETTERS =====
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -78,13 +88,11 @@ public class User {
     public void setUserType(String userType) { this.userType = userType; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public Boolean isActive() { return isActive; }
+    public void setActive(Boolean active) { isActive = active; }
 }

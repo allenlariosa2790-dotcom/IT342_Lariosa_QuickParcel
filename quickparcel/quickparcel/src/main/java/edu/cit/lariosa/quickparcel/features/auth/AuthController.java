@@ -7,7 +7,9 @@ import edu.cit.lariosa.quickparcel.features.auth.dto.MessageResponse;
 import edu.cit.lariosa.quickparcel.features.auth.repository.UserRepository;
 import edu.cit.lariosa.quickparcel.features.auth.JwtUtils;
 import edu.cit.lariosa.quickparcel.features.auth.UserDetailsImpl;
+import edu.cit.lariosa.quickparcel.features.shared.entity.Admin;
 import edu.cit.lariosa.quickparcel.features.shared.entity.User;
+import edu.cit.lariosa.quickparcel.features.shared.repository.AdminRepository;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -41,6 +44,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AdminRepository adminRepository;
 
     @Autowired
     JwtUtils jwtUtils;
@@ -100,6 +106,41 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("Registration failed: {}", e.getMessage());
             return ResponseEntity.badRequest().body(new MessageResponse("Registration failed: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/create-admin")
+    public ResponseEntity<?> createAdmin() {
+        try {
+            // Check if admin already exists
+            if (userRepository.existsByEmail("admin@quickparcel.com")) {
+                return ResponseEntity.ok(Map.of("message", "Admin already exists", "email", "admin@quickparcel.com", "password", "Admin123!"));
+            }
+
+            // Create user
+            User user = new User();
+            user.setEmail("admin@quickparcel.com");
+            user.setPasswordHash(passwordEncoder.encode("Admin123!"));
+            user.setFirstName("System");
+            user.setLastName("Administrator");
+            user.setPhone("09123456789");
+            user.setUserType("ADMIN");
+            user.setCreatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            // Create admin record
+            Admin admin = new Admin();
+            admin.setUser(user);
+            admin.setCreatedAt(LocalDateTime.now());
+            adminRepository.save(admin);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Admin created successfully!",
+                    "email", "admin@quickparcel.com",
+                    "password", "Admin123!"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

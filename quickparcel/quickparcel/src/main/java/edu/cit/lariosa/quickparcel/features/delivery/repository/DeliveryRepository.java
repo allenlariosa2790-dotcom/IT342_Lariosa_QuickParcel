@@ -4,6 +4,7 @@ import edu.cit.lariosa.quickparcel.features.shared.entity.Delivery;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -17,4 +18,5 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     List<Delivery> findByRiderId(@Param("riderId") Long riderId);
 
     List<Delivery> findByStatus(String status);
+
 }

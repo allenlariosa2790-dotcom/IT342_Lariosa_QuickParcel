@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api';
 
-const api = axios.create({
+const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -13,10 +13,11 @@ const api = axios.create({
 const publicEndpoints = [
   '/auth/register',
   '/auth/login',
-  '/test'
+  '/test',
+  '/deliveries/calculate-distance'
 ];
 
-api.interceptors.request.use(
+apiClient.interceptors.request.use(
   (config) => {
     // Check if this is a public endpoint
     const isPublicEndpoint = publicEndpoints.some(endpoint => config.url.includes(endpoint));
@@ -37,7 +38,7 @@ api.interceptors.request.use(
   }
 );
 
-api.interceptors.response.use(
+apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message);
@@ -45,4 +46,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+export default apiClient;

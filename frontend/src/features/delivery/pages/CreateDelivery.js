@@ -4,8 +4,13 @@ import Navbar from '../../shared/components/Navbar';
 import Sidebar from '../../shared/components/Sidebar';
 import LocationPicker from '../components/LocationPicker';
 import { createDelivery, calculateDistance } from '../services/delivery';
-import { createPayMongoPayment } from '../../payment/services/payment';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import StripePaymentForm from '../../payment/components/StripePaymentForm';
 import apiClient from '../../shared/utils/apiClient';
+
+// Stripe publishable key
+const stripePromise = loadStripe('pk_test_51TYhsNPAjsa07MQsijFSCldoyzhtRJNzbyErBdnSZhLzP6Or72VRTtWAVECXLTxHvGmpRlSU4Jy1rbYoWCucduwf0006mHsDAZ');
 
 const CreateDelivery = () => {
   const navigate = useNavigate();
@@ -24,7 +29,7 @@ const CreateDelivery = () => {
     imageFile: null,
   });
 
-  // Step 2: Pickup & Dropoff (now with full location objects)
+  // Step 2: Pickup & Dropoff
   const [pickup, setPickup] = useState({ address: '', lat: null, lng: null });
   const [dropoff, setDropoff] = useState({ address: '', lat: null, lng: null });
   const [scheduledTime, setScheduledTime] = useState('');
@@ -34,9 +39,42 @@ const CreateDelivery = () => {
   const [estimatedCost, setEstimatedCost] = useState(null);
 
   // Step 3: Payment
-  const [paymentMethod, setPaymentMethod] = useState('paypal');
+  const [paymentMethod, setPaymentMethod] = useState('COD');
+  const [deliveryResponse, setDeliveryResponse] = useState(null);
 
-  // Calculate distance & cost using backend (real)
+  // Get minimum datetime (current time + 1 day)
+  const getMinDateTime = () => {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 1);
+    minDate.setHours(0, 0, 0, 0);
+    return minDate.toISOString().slice(0, 16);
+  };
+
+  // Validate step 2 before proceeding
+  const validateStep2 = () => {
+    if (!pickup.address || !pickup.address.trim()) {
+      setError('Please select a valid pickup location');
+      return false;
+    }
+    if (!dropoff.address || !dropoff.address.trim()) {
+      setError('Please select a valid dropoff location');
+      return false;
+    }
+    if (!scheduledTime) {
+      setError('Please select a scheduled pickup time');
+      return false;
+    }
+    const selectedDate = new Date(scheduledTime);
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 1);
+    if (selectedDate < minDate) {
+      setError('Scheduled time must be at least 1 day from now');
+      return false;
+    }
+    return true;
+  };
+
+  // Calculate distance & cost using backend
   const calculateDistanceAndCost = async () => {
     if (!pickup.address || !dropoff.address) {
       setError('Please select both pickup and dropoff locations');
@@ -50,11 +88,9 @@ const CreateDelivery = () => {
       setError('');
     } catch (err) {
       console.error('Distance calculation failed', err);
-      // Fallback (optional, but avoid scaring user)
       const fallbackDistance = 5.3;
       setDistance(fallbackDistance);
       setEstimatedCost(50 + fallbackDistance * 20);
-      // setError('Could not calculate distance accurately, using estimate');
     } finally {
       setLoading(false);
     }
@@ -72,21 +108,40 @@ const CreateDelivery = () => {
   };
 
   const nextStep = async () => {
-    if (step === 2) {
-      // Calculate distance if not already done
+    if (step === 1) {
+      if (!parcel.name || !parcel.weight || !parcel.category) {
+        setError('Please fill in all required parcel details');
+        return;
+      }
+      setError('');
+      setStep(step + 1);
+    } else if (step === 2) {
+      if (!validateStep2()) {
+        return;
+      }
+      setError('');
       if (!distance) {
         await calculateDistanceAndCost();
       }
+      setStep(step + 1);
     }
-    setStep(step + 1);
   };
 
-  const prevStep = () => setStep(step - 1);
+  const prevStep = () => {
+    setError('');
+    setStep(step - 1);
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Handle COD submission
+  const handleCODSubmit = async () => {
+    if (loading) return;
     setLoading(true);
     setError('');
+
+    if (!validateStep2()) {
+      setLoading(false);
+      return;
+    }
 
     const payload = {
       parcel: {
@@ -105,38 +160,56 @@ const CreateDelivery = () => {
       dropoffLongitude: dropoff.lng,
       notes: notes,
       scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : null,
-      paymentMethod: paymentMethod,
-      paymentStatus: paymentMethod === 'COD' ? 'PENDING' : 'UNPAID',
+      paymentMethod: 'COD',
+      paymentStatus: 'PENDING',
     };
 
     try {
-      const deliveryResponse = await createDelivery(payload);
+      await createDelivery(payload);
+      navigate('/my-deliveries');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create delivery');
+      setLoading(false);
+    }
+  };
 
-      if (paymentMethod === 'COD') {
-        // COD: directly navigate to deliveries
-        navigate('/my-deliveries');
-      } else if (paymentMethod === 'PAYMONGO_GCASH') {
-        try {
-          const payment = await createPayMongoPayment(
-            deliveryResponse.data.id,
-            parseFloat(estimatedCost),
-            `Delivery ${deliveryResponse.data.trackingNumber}`
-          );
+  // Handle Stripe delivery creation (creates delivery, then shows payment form)
+  const handleStripeDeliveryCreation = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError('');
 
-          console.log('PayMongo payment response:', payment);
+    if (!validateStep2()) {
+      setLoading(false);
+      return;
+    }
 
-          if (payment.checkoutUrl) {
-            // Redirect to PayMongo checkout
-            window.location.href = payment.checkoutUrl;
-          } else {
-            throw new Error('No checkout URL received');
-          }
-        } catch (paymentError) {
-          console.error('Payment creation failed:', paymentError);
-          setError('Failed to initialize payment. Please try again.');
-          setLoading(false);
-        }
-      }
+    const payload = {
+      parcel: {
+        name: parcel.name,
+        description: parcel.description,
+        weight: parseFloat(parcel.weight),
+        size: parcel.size,
+        category: parcel.category,
+        isFragile: parcel.isFragile,
+      },
+      pickupAddress: pickup.address,
+      dropoffAddress: dropoff.address,
+      pickupLatitude: pickup.lat,
+      pickupLongitude: pickup.lng,
+      dropoffLatitude: dropoff.lat,
+      dropoffLongitude: dropoff.lng,
+      notes: notes,
+      scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : null,
+      paymentMethod: 'STRIPE',
+      paymentStatus: 'UNPAID',
+    };
+
+    try {
+      const response = await createDelivery(payload);
+      setDeliveryResponse(response.data);
+      setError('');
+      setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create delivery');
       setLoading(false);
@@ -168,203 +241,247 @@ const CreateDelivery = () => {
 
             {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
 
-            <form onSubmit={handleSubmit}>
-              {/* Step 1: Parcel Details */}
-              {step === 1 && (
-                <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+            {/* Step 1: Parcel Details */}
+            {step === 1 && (
+              <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Parcel Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={parcel.name}
+                    onChange={handleParcelChange}
+                    className="w-full border rounded-lg px-4 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={parcel.description}
+                    onChange={handleParcelChange}
+                    rows="3"
+                    className="w-full border rounded-lg px-4 py-2"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1">Parcel Name *</label>
+                    <label className="block text-gray-700 font-medium mb-1">Weight (kg) *</label>
                     <input
-                      type="text"
-                      name="name"
-                      value={parcel.name}
+                      type="number"
+                      name="weight"
+                      value={parcel.weight}
                       onChange={handleParcelChange}
+                      step="0.1"
                       className="w-full border rounded-lg px-4 py-2"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1">Description</label>
-                    <textarea
-                      name="description"
-                      value={parcel.description}
+                    <label className="block text-gray-700 font-medium mb-1">Size *</label>
+                    <select
+                      name="size"
+                      value={parcel.size}
                       onChange={handleParcelChange}
-                      rows="3"
                       className="w-full border rounded-lg px-4 py-2"
-                    />
+                    >
+                      <option value="SMALL">Small</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="LARGE">Large</option>
+                    </select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-1">Weight (kg) *</label>
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Category *</label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={parcel.category}
+                    onChange={handleParcelChange}
+                    className="w-full border rounded-lg px-4 py-2"
+                    required
+                  />
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="isFragile"
+                    checked={parcel.isFragile}
+                    onChange={handleParcelChange}
+                    className="mr-2"
+                  />
+                  <label className="text-gray-700">Fragile – Handle with care</label>
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Package Image (optional)</label>
+                  <input type="file" accept="image/*" onChange={handleParcelChange} />
+                </div>
+                <div className="flex justify-end">
+                  <button type="button" onClick={nextStep} className="bg-[#2563EB] text-white px-6 py-2 rounded-lg">
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Pickup & Dropoff with LocationPicker */}
+            {step === 2 && (
+              <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <LocationPicker
+                  label="Pickup Location *"
+                  onLocationSelect={(loc) => setPickup(loc)}
+                  initialAddress={pickup.address}
+                  initialLat={pickup.lat}
+                  initialLng={pickup.lng}
+                />
+                <LocationPicker
+                  label="Dropoff Location *"
+                  onLocationSelect={(loc) => setDropoff(loc)}
+                  initialAddress={dropoff.address}
+                  initialLat={dropoff.lat}
+                  initialLng={dropoff.lng}
+                />
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Scheduled Pickup Time *</label>
+                  <input
+                    type="datetime-local"
+                    value={scheduledTime}
+                    onChange={(e) => setScheduledTime(e.target.value)}
+                    min={getMinDateTime()}
+                    className="w-full border rounded-lg px-4 py-2"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Must be at least 1 day from now</p>
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Notes for Rider</label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows="2"
+                    className="w-full border rounded-lg px-4 py-2"
+                  />
+                </div>
+
+                {distance !== null && (
+                  <div className="bg-gray-100 p-4 rounded-lg">
+                    <p>Distance: {distance.toFixed(2)} km</p>
+                    <p className="font-bold">Estimated Cost: ₱{estimatedCost?.toFixed(2)}</p>
+                  </div>
+                )}
+
+                <div className="flex justify-between">
+                  <button type="button" onClick={prevStep} className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg">
+                    ← Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={loading}
+                    className="bg-[#2563EB] text-white px-6 py-2 rounded-lg disabled:opacity-50"
+                  >
+                    {loading ? 'Calculating...' : 'Next →'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Review & Payment */}
+            {step === 3 && (
+              <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <h3 className="text-lg font-bold">Review Your Delivery</h3>
+                <div className="border rounded-lg p-4 space-y-2 bg-gray-50">
+                  <p><strong>Parcel:</strong> {parcel.name} ({parcel.size}, {parcel.weight} kg)</p>
+                  <p><strong>From:</strong> {pickup.address}</p>
+                  <p><strong>To:</strong> {dropoff.address}</p>
+                  <p><strong>Scheduled:</strong> {scheduledTime ? new Date(scheduledTime).toLocaleString() : 'Not set'}</p>
+                  <p><strong>Distance:</strong> {distance?.toFixed(2)} km</p>
+                  <p className="text-lg font-bold text-[#2563EB]">Estimated Cost: ₱{estimatedCost?.toFixed(2)}</p>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">Payment Method *</label>
+                  <div className="flex gap-4 flex-wrap">
+                    <label className="flex items-center">
                       <input
-                        type="number"
-                        name="weight"
-                        value={parcel.weight}
-                        onChange={handleParcelChange}
-                        step="0.1"
-                        className="w-full border rounded-lg px-4 py-2"
-                        required
+                        type="radio"
+                        value="COD"
+                        checked={paymentMethod === 'COD'}
+                        onChange={(e) => {
+                          setPaymentMethod(e.target.value);
+                          setDeliveryResponse(null);
+                        }}
+                        className="mr-2"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-1">Size *</label>
-                      <select
-                        name="size"
-                        value={parcel.size}
-                        onChange={handleParcelChange}
-                        className="w-full border rounded-lg px-4 py-2"
-                      >
-                        <option value="SMALL">Small</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="LARGE">Large</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Category *</label>
-                    <input
-                      type="text"
-                      name="category"
-                      value={parcel.category}
-                      onChange={handleParcelChange}
-                      className="w-full border rounded-lg px-4 py-2"
-                      required
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isFragile"
-                      checked={parcel.isFragile}
-                      onChange={handleParcelChange}
-                      className="mr-2"
-                    />
-                    <label className="text-gray-700">Fragile – Handle with care</label>
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Package Image (optional)</label>
-                    <input type="file" accept="image/*" onChange={handleParcelChange} />
-                  </div>
-                  <div className="flex justify-end">
-                    <button type="button" onClick={nextStep} className="bg-[#2563EB] text-white px-6 py-2 rounded-lg">
-                      Next →
-                    </button>
+                      Cash on Delivery
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        value="STRIPE"
+                        checked={paymentMethod === 'STRIPE'}
+                        onChange={(e) => {
+                          setPaymentMethod(e.target.value);
+                          setDeliveryResponse(null);
+                        }}
+                        className="mr-2"
+                      />
+                      Credit/Debit Card (Stripe)
+                    </label>
+                    <label className="flex items-center opacity-50 cursor-not-allowed">
+                      <input
+                        type="radio"
+                        value="PAYMONGO"
+                        disabled
+                        className="mr-2"
+                      />
+                      GCash (Coming Soon)
+                    </label>
                   </div>
                 </div>
-              )}
 
-              {/* Step 2: Pickup & Dropoff with LocationPicker */}
-              {step === 2 && (
-                <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
-                  <LocationPicker
-                    label="Pickup Location"
-                    onLocationSelect={(loc) => setPickup(loc)}
-                    initialAddress={pickup.address}
-                    initialLat={pickup.lat}
-                    initialLng={pickup.lng}
-                  />
-                  <LocationPicker
-                    label="Dropoff Location"
-                    onLocationSelect={(loc) => setDropoff(loc)}
-                    initialAddress={dropoff.address}
-                    initialLat={dropoff.lat}
-                    initialLng={dropoff.lng}
-                  />
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Scheduled Time (optional)</label>
-                    <input
-                      type="datetime-local"
-                      value={scheduledTime}
-                      onChange={(e) => setScheduledTime(e.target.value)}
-                      className="w-full border rounded-lg px-4 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Notes for Rider</label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows="2"
-                      className="w-full border rounded-lg px-4 py-2"
-                    />
-                  </div>
+                {/* COD Option */}
+                {paymentMethod === 'COD' && (
+                  <button
+                    onClick={handleCODSubmit}
+                    disabled={loading}
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {loading ? 'Creating...' : `Confirm Delivery (₱${estimatedCost?.toFixed(2)} COD)`}
+                  </button>
+                )}
 
-                  {distance !== null && (
-                    <div className="bg-gray-100 p-4 rounded-lg">
-                      <p>Distance: {distance.toFixed(2)} km</p>
-                      <p className="font-bold">Estimated Cost: ₱{estimatedCost?.toFixed(2)}</p>
-                    </div>
-                  )}
+                {/* Stripe Option - Create Delivery button */}
+                {paymentMethod === 'STRIPE' && !deliveryResponse && (
+                  <button
+                    onClick={handleStripeDeliveryCreation}
+                    disabled={loading}
+                    className="w-full bg-[#2563EB] text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {loading ? 'Creating Delivery...' : `Proceed to Payment (₱${estimatedCost?.toFixed(2)})`}
+                  </button>
+                )}
 
-                  <div className="flex justify-between">
-                    <button type="button" onClick={prevStep} className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg">
-                      ← Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      disabled={loading}
-                      className="bg-[#2563EB] text-white px-6 py-2 rounded-lg disabled:opacity-50"
-                    >
-                      {loading ? 'Calculating...' : 'Next →'}
-                    </button>
+                {/* Stripe Payment Form - Shows after delivery is created */}
+                {paymentMethod === 'STRIPE' && deliveryResponse && (
+                  <div className="mt-4 pt-4 border-t">
+                    <Elements stripe={stripePromise}>
+                      <StripePaymentForm
+                        deliveryId={deliveryResponse.id}
+                        amount={estimatedCost}
+                        trackingNumber={deliveryResponse.trackingNumber}
+                        onSuccess={() => {
+                          alert('✅ Payment successful! Your delivery has been published.');
+                          navigate('/my-deliveries');
+                        }}
+                        onError={(msg) => setError(msg)}
+                      />
+                    </Elements>
                   </div>
-                </div>
-              )}
-
-              {/* Step 3: Review & Payment */}
-              {step === 3 && (
-                <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
-                  <h3 className="text-lg font-bold">Review Your Delivery</h3>
-                  <div className="border rounded-lg p-4 space-y-2">
-                    <p><strong>Parcel:</strong> {parcel.name} ({parcel.size}, {parcel.weight} kg)</p>
-                    <p><strong>From:</strong> {pickup.address}</p>
-                    <p><strong>To:</strong> {dropoff.address}</p>
-                    <p><strong>Distance:</strong> {distance?.toFixed(2)} km</p>
-                    <p><strong>Estimated Cost:</strong> ₱{estimatedCost?.toFixed(2)}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">Payment Method *</label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="COD"
-                          checked={paymentMethod === 'COD'}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="mr-2"
-                        />
-                        Cash on Delivery
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="PAYMONGO_GCASH"
-                          checked={paymentMethod === 'PAYMONGO_GCASH'}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="mr-2"
-                        />
-                        GCash (PayMongo)
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between pt-4">
-                    <button type="button" onClick={prevStep} className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg">
-                      ← Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-green-600 text-white px-6 py-2 rounded-lg disabled:opacity-50"
-                    >
-                      {loading ? 'Creating...' : `Confirm & Pay ₱${estimatedCost?.toFixed(2)}`}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </form>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

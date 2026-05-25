@@ -14,13 +14,21 @@ import AvailableDeliveries from './features/rider/pages/AvailableDeliveries';
 import Earnings from './features/rider/pages/Earnings';
 import PaymentSuccess from './features/payment/pages/PaymentSuccess';
 import PaymentCancel from './features/payment/pages/PaymentCancel';
+import PaymentsPage from './features/payment/pages/PaymentsPage';
 
+// Protected Route Component - must be used with element prop
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  if (!token) return <Navigate to="/login" />;
-  if (allowedRoles && !allowedRoles.includes(user.userType)) return <Navigate to="/" />;
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.userType)) {
+    return <Navigate to="/" />;
+  }
+
   return children;
 };
 
@@ -29,24 +37,94 @@ function App() {
     <Router>
       <ScrollToTop />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/sender-dashboard" element={<ProtectedRoute allowedRoles={['SENDER']}><SenderDashboard /></ProtectedRoute>} />
-        <Route path="/create-delivery" element={<ProtectedRoute allowedRoles={['SENDER']}><CreateDelivery /></ProtectedRoute>} />
+        {/* Sender Routes */}
+        <Route
+          path="/sender-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER']}>
+              <SenderDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-delivery"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER']}>
+              <CreateDelivery />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/rider-dashboard" element={<ProtectedRoute allowedRoles={['RIDER']}><RiderDashboard /></ProtectedRoute>} />
-        <Route path="/available-deliveries" element={<ProtectedRoute allowedRoles={['RIDER']}><AvailableDeliveries /></ProtectedRoute>} />
-        <Route path="/earnings" element={<ProtectedRoute allowedRoles={['RIDER']}><Earnings /></ProtectedRoute>} />
+        {/* Rider Routes */}
+        <Route
+          path="/rider-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['RIDER']}>
+              <RiderDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/available-deliveries"
+          element={
+            <ProtectedRoute allowedRoles={['RIDER']}>
+              <AvailableDeliveries />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/earnings"
+          element={
+            <ProtectedRoute allowedRoles={['RIDER']}>
+              <Earnings />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/my-deliveries" element={<ProtectedRoute allowedRoles={['SENDER', 'RIDER']}><MyDeliveries /></ProtectedRoute>} />
-        <Route path="/tracking/:id" element={<ProtectedRoute allowedRoles={['SENDER', 'RIDER']}><TrackingPage /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute allowedRoles={['SENDER', 'RIDER']}><Profile /></ProtectedRoute>} />
+        {/* Shared Routes (both roles) */}
+        <Route
+          path="/my-deliveries"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+              <MyDeliveries />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tracking/:id"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+              <TrackingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
 
+        {/* Payment Routes */}
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/cancel" element={<PaymentCancel />} />
+        <Route
+          path="/payments"
+          element={
+            <ProtectedRoute allowedRoles={['SENDER', 'RIDER']}>
+              <PaymentsPage />
+            </ProtectedRoute>
+          }
+        />
 
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

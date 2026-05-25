@@ -30,113 +30,115 @@ public class PayMongoService {
         return "Basic " + encodedAuth;
     }
 
-    /**
-     * Create a Payment Intent for GCash or Card payment
-     */
-    public Map<String, Object> createPaymentIntent(int amount, String description, String successUrl, String cancelUrl) {
+    public Map<String, Object> createGcashPayment(int amountInCentavos, String description, String successUrl, String cancelUrl) {
         try {
-            Map<String, Object> attributes = new HashMap<>();
-            attributes.put("amount", amount);
-            attributes.put("currency", "PHP");
-            attributes.put("description", description);
-            attributes.put("statement_descriptor", "QuickParcel");
-            attributes.put("payment_method_allowed", List.of("gcash", "card"));
+            // Create payment intent first
+            String paymentIntentId = createPaymentIntent(amountInCentavos, description);
+            System.out.println("Payment Intent Created: " + paymentIntentId);
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("attributes", attributes);
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("data", data);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", getAuthHeader());
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-            String url = apiUrl + "/payment_intents";
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-
-            JsonNode jsonNode = objectMapper.readTree(response.getBody());
-            String paymentIntentId = jsonNode.path("data").path("id").asText();
-
-            // Fix: Extract checkout URL correctly
-            String checkoutUrl = null;
-            JsonNode nextAction = jsonNode.path("data").path("attributes").path("next_action");
-            if (!nextAction.isMissingNode() && nextAction.has("redirect")) {
-                checkoutUrl = nextAction.path("redirect").path("url").asText();
-            }
-
-            // If no checkout URL, create a payment source (for GCash)
-            if (checkoutUrl == null || checkoutUrl.isEmpty()) {
-                checkoutUrl = createPaymentSource(paymentIntentId, successUrl, cancelUrl);
-            }
-
-            String status = jsonNode.path("data").path("attributes").path("status").asText();
+            // Then create GCash source
+            String checkoutUrl = createGcashSource(paymentIntentId, amountInCentavos, successUrl, cancelUrl);
+            System.out.println("Checkout URL: " + checkoutUrl);
 
             Map<String, Object> result = new HashMap<>();
             result.put("paymentIntentId", paymentIntentId);
             result.put("checkoutUrl", checkoutUrl);
-            result.put("status", status);
-
-            System.out.println("PayMongo Response - ID: " + paymentIntentId);
-            System.out.println("PayMongo Response - Checkout URL: " + checkoutUrl);
-
             return result;
+
         } catch (Exception e) {
+            System.err.println("PayMongo Error: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("Failed to create PayMongo payment intent: " + e.getMessage());
+            throw new RuntimeException("PayMongo payment creation failed: " + e.getMessage());
         }
     }
 
-    // Add this method to create a payment source (GCash specific)
-    private String createPaymentSource(String paymentIntentId, String successUrl, String cancelUrl) {
-        try {
-            Map<String, Object> attributes = new HashMap<>();
-            attributes.put("type", "gcash");
-            attributes.put("currency", "PHP");
+    private String createPaymentIntent(int amount, String description) throws Exception {
+        // Build request body
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("amount", amount);
+        attributes.put("currency", "PHP");
+        attributes.put("description", description);
+        attributes.put("statement_descriptor", "QuickParcel");
+        attributes.put("payment_method_allowed", List.of("gcash"));  // ← FIXED
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("attributes", attributes);
+        Map<String, Object> data = new HashMap<>();
+        data.put("attributes", attributes);
 
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("data", data);
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("data", data);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", getAuthHeader());
+        // Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", getAuthHeader());
 
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            String url = apiUrl + "/payment_intents/" + paymentIntentId + "/sources";
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        // Make API call
+        String url = apiUrl + "/payment_intents";
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-            JsonNode jsonNode = objectMapper.readTree(response.getBody());
-            String checkoutUrl = jsonNode.path("data").path("attributes").path("redirect").path("checkout_url").asText();
+        // Parse response
+        JsonNode jsonNode = objectMapper.readTree(response.getBody());
+        String paymentIntentId = jsonNode.path("data").path("id").asText();
 
-            return checkoutUrl;
-        } catch (Exception e) {
-            System.err.println("Failed to create payment source: " + e.getMessage());
-            return null;
-        }
+        return paymentIntentId;
     }
 
-    /**
-     * Retrieve Payment Intent status
-     */
-    public String getPaymentIntentStatus(String paymentIntentId) {
+    private String createGcashSource(String paymentIntentId, int amount, String successUrl, String cancelUrl) throws Exception {
+        // Build request body for GCash source
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("type", "gcash");
+        attributes.put("amount", amount);
+        attributes.put("currency", "PHP");
+        attributes.put("redirect", Map.of(
+                "success", successUrl,
+                "failed", cancelUrl
+        ));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("attributes", attributes);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("data", data);
+
+        // Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", getAuthHeader());
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        // Make API call
+        String url = apiUrl + "/payment_intents/" + paymentIntentId + "/sources";
+        System.out.println("Creating source at: " + url);
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+        // Parse response
+        JsonNode jsonNode = objectMapper.readTree(response.getBody());
+        String checkoutUrl = jsonNode.path("data").path("attributes").path("redirect").path("checkout_url").asText();
+
+        return checkoutUrl;
+    }
+
+    public String getPaymentStatus(String paymentIntentId) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", getAuthHeader());
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
             String url = apiUrl + "/payment_intents/" + paymentIntentId;
+
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
-            return jsonNode.path("data").path("attributes").path("status").asText();
+            String status = jsonNode.path("data").path("attributes").path("status").asText();
+
+            return status;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get payment intent status: " + e.getMessage());
+            System.err.println("Failed to get payment status: " + e.getMessage());
+            return "UNKNOWN";
         }
     }
 }

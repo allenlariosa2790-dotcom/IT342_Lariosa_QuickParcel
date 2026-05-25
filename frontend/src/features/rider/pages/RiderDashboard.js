@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../shared/components/Navbar';
 import Sidebar from '../../shared/components/Sidebar';
+import apiClient from '../../shared/utils/apiClient';
 import { getAvailableDeliveries, acceptDelivery, updateDeliveryStatus, markPaymentAsPaid } from '../services/riderApi';
 import { getMyDeliveries } from '../../tracking/services/trackingApi';
 
@@ -96,7 +97,7 @@ const RiderDashboard = () => {
 
   const markPaymentAsPaid = async (deliveryId) => {
     try {
-      await api.put(`/deliveries/${deliveryId}/mark-paid`);
+      await apiClient.put(`/deliveries/${deliveryId}/mark-paid`);
       alert('Payment marked as collected!');
       await fetchActiveDeliveries(); // refresh to update payment status
     } catch (err) {

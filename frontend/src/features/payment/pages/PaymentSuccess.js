@@ -17,12 +17,11 @@ const PaymentSuccess = () => {
 
     if (paymentIntentId && deliveryId) {
       // Call backend to verify payment and update status
-      api.get(`/payments/paymongo/status/${paymentIntentId}?deliveryId=${deliveryId}`)
+      apiClient.get(`/payments/paymongo/status/${paymentIntentId}?deliveryId=${deliveryId}`)
         .then(response => {
           console.log('Payment status response:', response.data);
           if (response.data.status === 'COMPLETED') {
             setStatus('Payment successful! Your delivery has been published.');
-            // Start countdown to redirect
             const timer = setInterval(() => {
               setCountdown(prev => {
                 if (prev <= 1) {

@@ -20,6 +20,9 @@ class AvailableDeliveriesActivity : AppCompatActivity() {
     private lateinit var riderViewModel: RiderViewModel
     private lateinit var deliveryAdapter: DeliveryAdapter
 
+    private var allDeliveries: List<com.quickparcel.app.shared.models.Delivery> = emptyList()
+    private var currentSort = "distance" // distance, earnings, size, date
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAvailableDeliveriesBinding.inflate(layoutInflater)
@@ -37,9 +40,14 @@ class AvailableDeliveriesActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        deliveryAdapter = DeliveryAdapter(emptyList()) { delivery ->
-            showAcceptDialog(delivery)
-        }
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = emptyList(),
+            onItemClick = { delivery ->
+                showAcceptDialog(delivery)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
         binding.rvDeliveries.layoutManager = LinearLayoutManager(this)
         binding.rvDeliveries.adapter = deliveryAdapter
     }
@@ -52,12 +60,96 @@ class AvailableDeliveriesActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener {
             finish()
         }
+
+        // Sort buttons
+        binding.btnSortDistance.setOnClickListener {
+            currentSort = "distance"
+            updateSortUI()
+            applySorting()
+        }
+
+        binding.btnSortEarnings.setOnClickListener {
+            currentSort = "earnings"
+            updateSortUI()
+            applySorting()
+        }
+
+        binding.btnSortSize.setOnClickListener {
+            currentSort = "size"
+            updateSortUI()
+            applySorting()
+        }
+
+        binding.btnSortDate.setOnClickListener {
+            currentSort = "date"
+            updateSortUI()
+            applySorting()
+        }
+    }
+
+    private fun updateSortUI() {
+        val selectedColor = getColor(R.color.quickparcel_blue)
+        val defaultColor = getColor(R.color.quickparcel_gray)
+        val selectedBg = getDrawable(R.drawable.bg_filter_selected)
+        val defaultBg = getDrawable(R.drawable.bg_filter_default)
+
+        binding.btnSortDistance.apply {
+            setTextColor(if (currentSort == "distance") selectedColor else defaultColor)
+            background = if (currentSort == "distance") selectedBg else defaultBg
+        }
+
+        binding.btnSortEarnings.apply {
+            setTextColor(if (currentSort == "earnings") selectedColor else defaultColor)
+            background = if (currentSort == "earnings") selectedBg else defaultBg
+        }
+
+        binding.btnSortSize.apply {
+            setTextColor(if (currentSort == "size") selectedColor else defaultColor)
+            background = if (currentSort == "size") selectedBg else defaultBg
+        }
+
+        binding.btnSortDate.apply {
+            setTextColor(if (currentSort == "date") selectedColor else defaultColor)
+            background = if (currentSort == "date") selectedBg else defaultBg
+        }
+    }
+
+    private fun applySorting() {
+        val sorted = when (currentSort) {
+            "distance" -> allDeliveries.sortedBy { it.distance ?: 999.0 }
+            "earnings" -> allDeliveries.sortedByDescending { it.estimatedCost }
+            "size" -> {
+                val sizeOrder = mapOf("SMALL" to 1, "MEDIUM" to 2, "LARGE" to 3)
+                allDeliveries.sortedBy { sizeOrder[it.parcel?.size] ?: 2 }
+            }
+            "date" -> allDeliveries.sortedByDescending { it.createdAt }
+            else -> allDeliveries
+        }
+
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = sorted,
+            onItemClick = { delivery ->
+                showAcceptDialog(delivery)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
+        binding.rvDeliveries.adapter = deliveryAdapter
+        binding.tvCount.text = "${sorted.size} deliveries available"
+
+        if (sorted.isEmpty()) {
+            binding.tvEmpty.visibility = android.view.View.VISIBLE
+            binding.rvDeliveries.visibility = android.view.View.GONE
+        } else {
+            binding.tvEmpty.visibility = android.view.View.GONE
+            binding.rvDeliveries.visibility = android.view.View.VISIBLE
+        }
     }
 
     private fun showAcceptDialog(delivery: com.quickparcel.app.shared.models.Delivery) {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Accept Delivery")
-            .setMessage("Do you want to accept delivery ${delivery.trackingNumber} for ₱${String.format("%.2f", delivery.estimatedCost)}?")
+            .setMessage("Accept delivery ${delivery.trackingNumber} for ₱${String.format("%.2f", delivery.estimatedCost)}?")
             .setPositiveButton("Accept") { _, _ ->
                 riderViewModel.acceptDelivery(delivery.id)
             }
@@ -73,7 +165,8 @@ class AvailableDeliveriesActivity : AppCompatActivity() {
                     is RiderAvailableState.Success -> {
                         showLoading(false)
                         binding.swipeRefresh.isRefreshing = false
-                        updateUI(state.deliveries)
+                        allDeliveries = state.deliveries
+                        applySorting()
                     }
                     is RiderAvailableState.Error -> {
                         showLoading(false)
@@ -91,9 +184,7 @@ class AvailableDeliveriesActivity : AppCompatActivity() {
                         Toast.makeText(this@AvailableDeliveriesActivity, "Accepting...", Toast.LENGTH_SHORT).show()
                     }
                     is RiderAcceptState.Success -> {
-                        Toast.makeText(this@AvailableDeliveriesActivity, "Delivery accepted successfully!", Toast.LENGTH_LONG).show()
-                        riderViewModel.loadAvailableDeliveries()
-                        riderViewModel.loadDashboardData()
+                        Toast.makeText(this@AvailableDeliveriesActivity, "✅ Delivery accepted!", Toast.LENGTH_LONG).show()
                         finish()
                     }
                     is RiderAcceptState.Error -> {
@@ -101,23 +192,6 @@ class AvailableDeliveriesActivity : AppCompatActivity() {
                     }
                 }
             }
-        }
-    }
-
-    private fun updateUI(deliveries: List<com.quickparcel.app.shared.models.Delivery>) {
-        binding.tvCount.text = "${deliveries.size} deliveries available"
-
-        deliveryAdapter = DeliveryAdapter(deliveries) { delivery ->
-            showAcceptDialog(delivery)
-        }
-        binding.rvDeliveries.adapter = deliveryAdapter
-
-        if (deliveries.isEmpty()) {
-            binding.tvEmpty.visibility = android.view.View.VISIBLE
-            binding.rvDeliveries.visibility = android.view.View.GONE
-        } else {
-            binding.tvEmpty.visibility = android.view.View.GONE
-            binding.rvDeliveries.visibility = android.view.View.VISIBLE
         }
     }
 

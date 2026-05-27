@@ -1,5 +1,6 @@
 package edu.cit.lariosa.quickparcel.features.payment;
 
+import edu.cit.lariosa.quickparcel.features.auth.UserDetailsImpl;
 import edu.cit.lariosa.quickparcel.features.delivery.DeliveryService;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Delivery;
 import edu.cit.lariosa.quickparcel.features.shared.entity.Payment;
@@ -7,10 +8,12 @@ import edu.cit.lariosa.quickparcel.features.payment.repository.PaymentRepository
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -34,6 +37,40 @@ public class PaymentController {
 
     @Value("${frontend.url:http://localhost:3000}")
     private String frontendUrl;
+
+    // GET /api/payments/my - Get payments for the current user
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyPayments(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        try {
+            List<Payment> payments = new ArrayList<>();
+
+            if ("SENDER".equals(userDetails.getUserType())) {
+                payments = paymentRepository.findBySenderId(userDetails.getId());
+            } else if ("RIDER".equals(userDetails.getUserType())) {
+                List<Delivery> deliveries = deliveryService.getDeliveriesByRiderId(userDetails.getId());
+                payments = deliveries.stream()
+                        .map(delivery -> paymentRepository.findByDeliveryId(delivery.getId()).orElse(null))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            }
+
+            List<Map<String, Object>> paymentList = payments.stream().map(payment -> {
+                Map<String, Object> p = new HashMap<>();
+                p.put("id", payment.getId());
+                p.put("deliveryId", payment.getDelivery().getId());
+                p.put("trackingNumber", payment.getDelivery().getTrackingNumber());
+                p.put("amount", payment.getAmount());
+                p.put("paymentMethod", payment.getPaymentMethod());
+                p.put("paymentStatus", payment.getStatus());
+                p.put("createdAt", payment.getCreatedAt().toString());
+                return p;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of("success", true, "data", paymentList));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     @PutMapping("/{deliveryId}/mark-paid")
     public ResponseEntity<?> markDeliveryAsPaid(@PathVariable Long deliveryId) {
@@ -68,6 +105,7 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
     @PostMapping("/paymongo/create")
     public ResponseEntity<?> createPayMongoPayment(@RequestBody Map<String, Object> request) {
         try {
@@ -108,6 +146,7 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
     @PostMapping("/stripe/create-payment-intent")
     public ResponseEntity<?> createStripePaymentIntent(@RequestBody Map<String, Object> request) {
         try {

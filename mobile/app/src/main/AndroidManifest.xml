@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Remove duplicate permissions - keep only one of each -->
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -20,6 +20,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:replace="android:allowBackup,android:label">
 
+        <!-- Auth Activities -->
         <activity
             android:name=".features.auth.LoginActivity"
             android:exported="true">
@@ -28,21 +29,40 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".features.auth.RegisterActivity" />
+
+        <!-- Sender Activities -->
         <activity android:name=".features.sender.SenderDashboardActivity" />
+        <activity android:name=".features.delivery.CreateDeliveryActivity" />
+
+        <!-- Tracking Activities -->
+        <activity android:name=".features.tracking.MyDeliveriesActivity" />
+        <activity android:name=".features.tracking.TrackingActivity" />
+
+        <!-- Rider Activities -->
         <activity android:name=".features.rider.RiderDashboardActivity" />
+        <activity android:name=".features.rider.AvailableDeliveriesActivity" />
+        <activity android:name=".features.rider.EarningsActivity" />
+        <activity android:name=".features.rider.ActiveDeliveriesActivity" />
+
+        <!-- Payment Activities -->
+        <activity android:name=".features.payment.PaymentActivity" />
+        <activity android:name=".features.payment.PaymentHistoryActivity" />
+
+        <!-- Profile Activity -->
+        <activity android:name=".features.profile.ProfileActivity" />
+
+        <!-- Admin Activities -->
         <activity android:name=".features.admin.AdminDashboardActivity" />
         <activity android:name=".features.admin.AdminUsersActivity" />
         <activity android:name=".features.admin.AdminDeliveriesActivity" />
-        <activity android:name=".features.delivery.CreateDeliveryActivity" />
-        <activity android:name=".features.tracking.MyDeliveriesActivity" />
-        <activity android:name=".features.tracking.TrackingActivity" />
-        <activity android:name=".features.rider.AvailableDeliveriesActivity" />
-        <activity android:name=".features.rider.EarningsActivity" />
-        <activity android:name=".features.payment.PaymentActivity" />
-        <activity android:name=".features.profile.ProfileActivity" />
+
+        <!-- Map Picker Activity -->
         <activity android:name=".features.delivery.OSMLocationPickerActivity" />
+
+        <!-- Main Activity (optional - redirects based on login state) -->
+        <activity android:name=".MainActivity"
+            android:exported="false" />
 
     </application>
 

@@ -282,6 +282,16 @@
                 android:layout_marginBottom="12dp" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_payments"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="💰 Payment History"
+                android:textSize="14sp"
+                app:cornerRadius="8dp"
+                android:backgroundTint="@color/quickparcel_blue"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_profile"
                 style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"

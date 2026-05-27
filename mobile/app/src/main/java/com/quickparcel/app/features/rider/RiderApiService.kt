@@ -18,7 +18,7 @@ interface RiderApiService {
     ): Response<RiderModels.ActionResponse>
 
     @GET("api/rider/deliveries/active")
-    suspend fun getActiveDelivery(): Response<RiderModels.ActiveDeliveryResponse>
+    suspend fun getActiveDeliveries(): Response<RiderModels.ActiveDeliveriesResponse>
 
     @GET("api/tracking/my")
     suspend fun getMyDeliveries(): Response<RiderModels.DeliveriesResponse>

@@ -40,6 +40,26 @@ class RiderRepository(
         }
     }
 
+    suspend fun getActiveDeliveries(): RiderModels.ActiveDeliveriesResult {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.getActiveDeliveries()
+                if (response.isSuccessful && response.body() != null) {
+                    val deliveries = response.body()!!.data
+                    // Filter only active ones (ACCEPTED, PICKED_UP, IN_TRANSIT)
+                    val active = deliveries.filter {
+                        it.status in listOf("ACCEPTED", "PICKED_UP", "IN_TRANSIT")
+                    }
+                    RiderModels.ActiveDeliveriesResult.Success(active)
+                } else {
+                    RiderModels.ActiveDeliveriesResult.Error(response.message() ?: "Failed to load active deliveries")
+                }
+            } catch (e: Exception) {
+                RiderModels.ActiveDeliveriesResult.Error(e.message ?: "Network error")
+            }
+        }
+    }
+
     suspend fun updateDeliveryStatus(deliveryId: Int, status: String, location: String): RiderModels.StatusResult {
         return withContext(Dispatchers.IO) {
             try {
@@ -66,21 +86,6 @@ class RiderRepository(
                 }
             } catch (e: Exception) {
                 emptyList()
-            }
-        }
-    }
-
-    suspend fun getActiveDelivery(): Delivery? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = api.getActiveDelivery()
-                if (response.isSuccessful && response.body() != null && response.body()!!.success) {
-                    response.body()!!.data
-                } else {
-                    null
-                }
-            } catch (e: Exception) {
-                null
             }
         }
     }

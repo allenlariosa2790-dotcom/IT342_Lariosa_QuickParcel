@@ -266,7 +266,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardElevation="2dp"
+                android:visibility="visible">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -307,6 +308,49 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Active Deliveries List Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Your Active Deliveries"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btn_view_all_active"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View All →"
+                    android:textSize="12sp"
+                    android:textColor="@color/quickparcel_blue"
+                    android:clickable="true" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_active_deliveries"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:id="@+id/tv_active_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No active deliveries"
+                android:gravity="center"
+                android:padding="24dp"
+                android:textSize="13sp"
+                android:textColor="@color/quickparcel_gray"
+                android:visibility="gone" />
+
             <!-- Quick Actions -->
             <TextView
                 android:layout_width="wrap_content"
@@ -314,6 +358,7 @@
                 android:text="Quick Actions"
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
 
             <LinearLayout

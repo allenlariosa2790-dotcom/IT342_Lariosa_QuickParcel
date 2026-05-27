@@ -15,6 +15,8 @@ import com.quickparcel.app.features.auth.LoginActivity
 import com.quickparcel.app.features.delivery.CreateDeliveryActivity
 import com.quickparcel.app.features.profile.ProfileActivity
 import com.quickparcel.app.features.tracking.MyDeliveriesActivity
+import com.quickparcel.app.features.tracking.TrackingActivity
+import com.quickparcel.app.features.payment.PaymentHistoryActivity
 import com.quickparcel.app.shared.datastore.TokenManager
 import com.quickparcel.app.shared.network.RetrofitClient
 import com.quickparcel.app.shared.utils.Constants
@@ -56,7 +58,6 @@ class SenderDashboardActivity : AppCompatActivity() {
                     binding.tvEmail.text = user.email
                     binding.tvWelcome.text = "Welcome back, ${user.firstName}!"
 
-                    // Load profile picture - ShapeableImageView handles the circular shape automatically
                     val baseIp = Constants.BASE_URL.replace("http://", "").replace("/", "")
                     val apiService = retrofitClient.create(com.quickparcel.app.features.profile.ProfileApiService::class.java)
                     val response = apiService.getProfilePicture()
@@ -65,7 +66,7 @@ class SenderDashboardActivity : AppCompatActivity() {
                         Glide.with(this@SenderDashboardActivity)
                             .load(imageUrl)
                             .placeholder(R.drawable.ic_profile_placeholder)
-                            .into(binding.ivProfilePicture)  // No circleCrop() needed - ShapeableImageView handles it
+                            .into(binding.ivProfilePicture)
                     } else {
                         Glide.with(this@SenderDashboardActivity)
                             .load(R.drawable.ic_profile_placeholder)
@@ -74,7 +75,6 @@ class SenderDashboardActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                // Use default placeholder
                 Glide.with(this@SenderDashboardActivity)
                     .load(R.drawable.ic_profile_placeholder)
                     .into(binding.ivProfilePicture)
@@ -83,12 +83,17 @@ class SenderDashboardActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        deliveryAdapter = DeliveryAdapter(emptyList()) { delivery ->
-            val intent = Intent(this, com.quickparcel.app.features.tracking.TrackingActivity::class.java)
-            intent.putExtra("delivery_id", delivery.id)
-            intent.putExtra("tracking_number", delivery.trackingNumber)
-            startActivity(intent)
-        }
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = emptyList(),
+            onItemClick = { delivery ->
+                val intent = Intent(this, TrackingActivity::class.java)
+                intent.putExtra("delivery_id", delivery.id)
+                intent.putExtra("tracking_number", delivery.trackingNumber)
+                startActivity(intent)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
         binding.rvRecentDeliveries.layoutManager = LinearLayoutManager(this)
         binding.rvRecentDeliveries.adapter = deliveryAdapter
     }
@@ -103,17 +108,18 @@ class SenderDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, CreateDeliveryActivity::class.java))
         }
 
-        // Navigate to MyDeliveriesActivity
         binding.btnViewAllDeliveries.setOnClickListener {
             startActivity(Intent(this, MyDeliveriesActivity::class.java))
         }
 
-        // Navigate to ProfileActivity
+        binding.btnPayments.setOnClickListener {
+            startActivity(Intent(this, PaymentHistoryActivity::class.java))
+        }
+
         binding.btnProfile.setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
 
-        // Logout button
         binding.btnLogout.setOnClickListener {
             androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Logout")
@@ -164,18 +170,21 @@ class SenderDashboardActivity : AppCompatActivity() {
         binding.tvCompletedDeliveries.text = stats.completedDeliveries.toString()
         binding.tvTotalSpent.text = CurrencyFormatter.format(stats.totalSpent)
 
-        // Limit to 3 recent deliveries
         val limitedDeliveries = recentDeliveries.take(3)
 
-        deliveryAdapter = DeliveryAdapter(limitedDeliveries) { delivery ->
-            val intent = Intent(this, com.quickparcel.app.features.tracking.TrackingActivity::class.java)
-            intent.putExtra("delivery_id", delivery.id)
-            intent.putExtra("tracking_number", delivery.trackingNumber)
-            startActivity(intent)
-        }
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = limitedDeliveries,
+            onItemClick = { delivery ->
+                val intent = Intent(this, TrackingActivity::class.java)
+                intent.putExtra("delivery_id", delivery.id)
+                intent.putExtra("tracking_number", delivery.trackingNumber)
+                startActivity(intent)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
         binding.rvRecentDeliveries.adapter = deliveryAdapter
 
-        // Show message if no deliveries
         if (limitedDeliveries.isEmpty()) {
             binding.tvEmpty.visibility = android.view.View.VISIBLE
             binding.rvRecentDeliveries.visibility = android.view.View.GONE

@@ -15,9 +15,9 @@ sealed class RiderModels {
         val message: String? = null
     )
 
-    data class ActiveDeliveryResponse(
+    data class ActiveDeliveriesResponse(
         val success: Boolean,
-        val data: Delivery?
+        val data: List<Delivery>
     )
 
     data class DeliveriesResponse(
@@ -38,12 +38,6 @@ sealed class RiderModels {
         val completedCount: Int
     )
 
-    data class WeeklyEarning(
-        val day: String,
-        val earnings: Double,
-        val deliveries: Int
-    )
-
     sealed class AvailableResult {
         data class Success(val deliveries: List<Delivery>) : AvailableResult()
         data class Error(val message: String) : AvailableResult()
@@ -52,6 +46,11 @@ sealed class RiderModels {
     sealed class AcceptResult {
         data class Success(val delivery: Delivery) : AcceptResult()
         data class Error(val message: String) : AcceptResult()
+    }
+
+    sealed class ActiveDeliveriesResult {
+        data class Success(val deliveries: List<Delivery>) : ActiveDeliveriesResult()
+        data class Error(val message: String) : ActiveDeliveriesResult()
     }
 
     sealed class StatusResult {

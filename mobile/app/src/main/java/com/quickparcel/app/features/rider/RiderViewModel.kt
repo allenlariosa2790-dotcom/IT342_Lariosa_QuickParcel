@@ -20,6 +20,9 @@ class RiderViewModel(
     private val _acceptResult = MutableSharedFlow<RiderAcceptState>()
     val acceptResult = _acceptResult.asSharedFlow()
 
+    private val _activeDeliveriesResult = MutableSharedFlow<RiderActiveDeliveriesState>()
+    val activeDeliveriesResult = _activeDeliveriesResult.asSharedFlow()
+
     private val _statusResult = MutableSharedFlow<RiderStatusState>()
     val statusResult = _statusResult.asSharedFlow()
 
@@ -36,6 +39,21 @@ class RiderViewModel(
                 }
                 is RiderModels.AvailableResult.Error -> {
                     _availableResult.emit(RiderAvailableState.Error(result.message))
+                }
+            }
+        }
+    }
+
+    fun loadActiveDeliveries() {
+        viewModelScope.launch {
+            _activeDeliveriesResult.emit(RiderActiveDeliveriesState.Loading)
+            val result = repository.getActiveDeliveries()
+            when (result) {
+                is RiderModels.ActiveDeliveriesResult.Success -> {
+                    _activeDeliveriesResult.emit(RiderActiveDeliveriesState.Success(result.deliveries))
+                }
+                is RiderModels.ActiveDeliveriesResult.Error -> {
+                    _activeDeliveriesResult.emit(RiderActiveDeliveriesState.Error(result.message))
                 }
             }
         }
@@ -76,7 +94,10 @@ class RiderViewModel(
             _dashboardResult.emit(RiderDashboardState.Loading)
 
             val deliveries = repository.getMyDeliveries()
-            val activeDelivery = repository.getActiveDelivery()
+            val activeDeliveries = repository.getActiveDeliveries()
+            val activeDelivery = activeDeliveries.takeIf { it is RiderModels.ActiveDeliveriesResult.Success }?.let {
+                (it as RiderModels.ActiveDeliveriesResult.Success).deliveries.firstOrNull()
+            }
 
             val completed = deliveries.filter { it.status == "DELIVERED" }
             val totalEarnings = completed.sumOf { it.estimatedCost }
@@ -143,6 +164,12 @@ sealed class RiderAcceptState {
     object Loading : RiderAcceptState()
     data class Success(val delivery: Delivery) : RiderAcceptState()
     data class Error(val message: String) : RiderAcceptState()
+}
+
+sealed class RiderActiveDeliveriesState {
+    object Loading : RiderActiveDeliveriesState()
+    data class Success(val deliveries: List<Delivery>) : RiderActiveDeliveriesState()
+    data class Error(val message: String) : RiderActiveDeliveriesState()
 }
 
 sealed class RiderStatusState {

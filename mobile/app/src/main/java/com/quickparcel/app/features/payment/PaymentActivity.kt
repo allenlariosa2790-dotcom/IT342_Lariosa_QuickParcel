@@ -1,5 +1,6 @@
 package com.quickparcel.app.features.payment
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -42,6 +43,7 @@ class PaymentActivity : AppCompatActivity() {
         paymentViewModel = PaymentViewModel(retrofitClient)
 
         setupUI()
+        setupCardInputFormatting()
         setupListeners()
         observeViewModel()
     }
@@ -50,6 +52,78 @@ class PaymentActivity : AppCompatActivity() {
         binding.tvTrackingNumber.text = trackingNumber
         binding.tvAmount.text = "₱${String.format("%.2f", amount)}"
         binding.tvTotal.text = "₱${String.format("%.2f", amount)}"
+    }
+
+    private fun setupCardInputFormatting() {
+        // Auto-format card number
+        binding.etCardNumber.addTextChangedListener(object : android.text.TextWatcher {
+            private var isFormatting = false
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                if (isFormatting) return
+                isFormatting = true
+
+                val cleanDigits = s?.toString()?.replace(" ", "") ?: ""
+                val truncated = if (cleanDigits.length > 16) cleanDigits.substring(0, 16) else cleanDigits
+                val formatted = StringBuilder()
+                for (i in truncated.indices) {
+                    if (i > 0 && i % 4 == 0) formatted.append(" ")
+                    formatted.append(truncated[i])
+                }
+                val newText = formatted.toString()
+                if (s?.toString() != newText) {
+                    s?.replace(0, s.length, newText)
+                    s?.let { android.text.Selection.setSelection(it, newText.length) }
+                }
+                isFormatting = false
+            }
+        })
+
+        // Auto-format expiry
+        binding.etExpiry.addTextChangedListener(object : android.text.TextWatcher {
+            private var isFormatting = false
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                if (isFormatting) return
+                isFormatting = true
+
+                val cleanDigits = s?.toString()?.replace("/", "") ?: ""
+                val truncated = if (cleanDigits.length > 4) cleanDigits.substring(0, 4) else cleanDigits
+                val formatted = when {
+                    truncated.length >= 2 -> "${truncated.substring(0, 2)}/${truncated.substring(2)}"
+                    else -> truncated
+                }
+                if (s?.toString() != formatted) {
+                    s?.replace(0, s.length, formatted)
+                    s?.let { android.text.Selection.setSelection(it, formatted.length) }
+                }
+                isFormatting = false
+            }
+        })
+
+        // CVV limit
+        binding.etCvv.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val text = s?.toString() ?: ""
+                if (text.length > 4) s?.delete(4, text.length)
+            }
+        })
+
+        // ZIP limit
+        binding.etZip.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val text = s?.toString() ?: ""
+                if (text.length > 6) s?.delete(6, text.length)
+            }
+        })
     }
 
     private fun setupListeners() {
@@ -62,29 +136,48 @@ class PaymentActivity : AppCompatActivity() {
     }
 
     private fun validateCardDetails(): Boolean {
-        val cardNumber = binding.etCardNumber.text.toString().trim()
+        val cardNumber = binding.etCardNumber.text.toString().trim().replace(" ", "")
         val expiry = binding.etExpiry.text.toString().trim()
         val cvv = binding.etCvv.text.toString().trim()
+        val zip = binding.etZip.text.toString().trim()
 
         if (cardNumber.isEmpty()) {
             Toast.makeText(this, "Please enter card number", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (cardNumber.length != 16) {
+            Toast.makeText(this, "Card number must be 16 digits", Toast.LENGTH_SHORT).show()
             return false
         }
         if (expiry.isEmpty()) {
             Toast.makeText(this, "Please enter expiry date", Toast.LENGTH_SHORT).show()
             return false
         }
+        if (expiry.length != 5 || !expiry.contains("/")) {
+            Toast.makeText(this, "Use format MM/YY (e.g., 12/25)", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        val month = expiry.substring(0, 2).toIntOrNull()
+        if (month == null || month < 1 || month > 12) {
+            Toast.makeText(this, "Invalid month (01-12)", Toast.LENGTH_SHORT).show()
+            return false
+        }
         if (cvv.isEmpty()) {
             Toast.makeText(this, "Please enter CVV", Toast.LENGTH_SHORT).show()
             return false
         }
-
-        // For test mode, accept test card
-        val cleanCardNumber = cardNumber.replace(" ", "")
-        if (cleanCardNumber.startsWith("4242")) {
-            return true
+        if (cvv.length !in 3..4) {
+            Toast.makeText(this, "CVV must be 3-4 digits", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (zip.isEmpty()) {
+            Toast.makeText(this, "Please enter ZIP code", Toast.LENGTH_SHORT).show()
+            return false
         }
 
+        if (cardNumber.startsWith("4242")) {
+            return true
+        }
         Toast.makeText(this, "Use test card: 4242 4242 4242 4242", Toast.LENGTH_SHORT).show()
         return false
     }
@@ -100,7 +193,6 @@ class PaymentActivity : AppCompatActivity() {
                 when (state) {
                     is PaymentIntentState.Loading -> showLoading(true)
                     is PaymentIntentState.Success -> {
-                        // Payment intent created successfully, now mark as paid
                         paymentViewModel.markDeliveryAsPaid(deliveryId)
                     }
                     is PaymentIntentState.Error -> {
@@ -117,8 +209,10 @@ class PaymentActivity : AppCompatActivity() {
                     is MarkPaidState.Loading -> showLoading(true)
                     is MarkPaidState.Success -> {
                         showLoading(false)
-                        Toast.makeText(this@PaymentActivity, "✅ Payment successful! Delivery has been published.", Toast.LENGTH_LONG).show()
-                        startActivity(android.content.Intent(this@PaymentActivity, SenderDashboardActivity::class.java))
+                        Toast.makeText(this@PaymentActivity, "✅ Payment successful!", Toast.LENGTH_LONG).show()
+                        val intent = Intent(this@PaymentActivity, SenderDashboardActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
                         finish()
                     }
                     is MarkPaidState.Error -> {

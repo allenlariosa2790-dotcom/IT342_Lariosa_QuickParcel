@@ -41,9 +41,14 @@ class AdminDeliveriesActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        deliveryAdapter = DeliveryAdapter(emptyList()) { delivery ->
-            showDeliveryDetailsDialog(delivery)
-        }
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = emptyList(),
+            onItemClick = { delivery ->
+                showDeliveryDetailsDialog(delivery)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
         binding.rvDeliveries.layoutManager = LinearLayoutManager(this)
         binding.rvDeliveries.adapter = deliveryAdapter
     }
@@ -136,7 +141,6 @@ class AdminDeliveriesActivity : AppCompatActivity() {
     }
 
     private fun showDeliveryDetailsDialog(delivery: com.quickparcel.app.shared.models.Delivery) {
-        // Get sender name - try multiple possible paths
         val senderName = when {
             delivery.sender?.user != null ->
                 "${delivery.sender.user.firstName} ${delivery.sender.user.lastName}"

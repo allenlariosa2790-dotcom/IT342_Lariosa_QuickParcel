@@ -11,6 +11,7 @@ import com.quickparcel.app.R
 import com.quickparcel.app.databinding.ActivityRiderDashboardBinding
 import com.quickparcel.app.features.auth.AuthModels
 import com.quickparcel.app.features.sender.DeliveryAdapter
+import com.quickparcel.app.features.tracking.MyDeliveriesActivity
 import com.quickparcel.app.features.tracking.TrackingActivity
 import com.quickparcel.app.shared.datastore.TokenManager
 import com.quickparcel.app.shared.network.RetrofitClient
@@ -23,6 +24,7 @@ class RiderDashboardActivity : AppCompatActivity() {
     private lateinit var retrofitClient: RetrofitClient
     private lateinit var riderViewModel: RiderViewModel
     private lateinit var deliveryAdapter: DeliveryAdapter
+    private lateinit var activeDeliveriesAdapter: DeliveryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,26 +36,65 @@ class RiderDashboardActivity : AppCompatActivity() {
         riderViewModel = RiderViewModel(retrofitClient)
 
         setupRecyclerView()
+        setupActiveDeliveriesRecyclerView()
         setupListeners()
         observeViewModel()
 
         riderViewModel.loadDashboardData()
+        riderViewModel.loadAvailableDeliveries()
+        riderViewModel.loadActiveDeliveries()
     }
 
     private fun setupRecyclerView() {
-        deliveryAdapter = DeliveryAdapter(emptyList()) { delivery ->
-            val intent = Intent(this, TrackingActivity::class.java)
-            intent.putExtra("delivery_id", delivery.id)
-            intent.putExtra("tracking_number", delivery.trackingNumber)
-            startActivity(intent)
-        }
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = emptyList(),
+            onItemClick = { delivery ->
+                val intent = Intent(this, TrackingActivity::class.java)
+                intent.putExtra("delivery_id", delivery.id)
+                intent.putExtra("tracking_number", delivery.trackingNumber)
+                startActivity(intent)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
         binding.rvRecentDeliveries.layoutManager = LinearLayoutManager(this)
         binding.rvRecentDeliveries.adapter = deliveryAdapter
+    }
+
+    private fun setupActiveDeliveriesRecyclerView() {
+        activeDeliveriesAdapter = DeliveryAdapter(
+            deliveries = emptyList(),
+            onItemClick = { delivery ->
+                val intent = Intent(this, TrackingActivity::class.java)
+                intent.putExtra("delivery_id", delivery.id)
+                intent.putExtra("tracking_number", delivery.trackingNumber)
+                startActivity(intent)
+            },
+            isRiderMode = true,
+            onStatusUpdate = { delivery, newStatus ->
+                updateDeliveryStatus(delivery.id, newStatus)
+            }
+        )
+        binding.rvActiveDeliveries.layoutManager = LinearLayoutManager(this)
+        binding.rvActiveDeliveries.adapter = activeDeliveriesAdapter
+    }
+
+    private fun updateDeliveryStatus(deliveryId: Int, newStatus: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Update Status")
+            .setMessage("Mark delivery as $newStatus?")
+            .setPositiveButton("Yes") { _, _ ->
+                riderViewModel.updateDeliveryStatus(deliveryId, newStatus, "Current location")
+            }
+            .setNegativeButton("No", null)
+            .show()
     }
 
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener {
             riderViewModel.loadDashboardData()
+            riderViewModel.loadAvailableDeliveries()
+            riderViewModel.loadActiveDeliveries()
         }
 
         binding.btnBrowseDeliveries.setOnClickListener {
@@ -68,11 +109,14 @@ class RiderDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, EarningsActivity::class.java))
         }
 
-        binding.btnViewTracking.setOnClickListener {
-            val intent = Intent(this, TrackingActivity::class.java)
-            intent.putExtra("delivery_id", it.tag as? Int ?: 0)
-            startActivity(intent)
+        binding.btnViewAllActive.setOnClickListener {
+            startActivity(Intent(this, ActiveDeliveriesActivity::class.java))
         }
+
+        // Add this button to your layout or remove if not present
+        // binding.btnViewAllDeliveries.setOnClickListener {
+        //     startActivity(Intent(this, MyDeliveriesActivity::class.java))
+        // }
     }
 
     private fun observeViewModel() {
@@ -93,10 +137,55 @@ class RiderDashboardActivity : AppCompatActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            riderViewModel.availableResult.collect { state ->
+                when (state) {
+                    is RiderAvailableState.Success -> {
+                        val count = state.deliveries.size
+                        binding.btnAvailableDeliveries.text = "Available ($count)"
+                    }
+                    else -> {}
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            riderViewModel.activeDeliveriesResult.collect { state ->
+                when (state) {
+                    is RiderActiveDeliveriesState.Success -> {
+                        activeDeliveriesAdapter.updateDeliveries(state.deliveries.take(3))
+                        if (state.deliveries.isEmpty()) {
+                            binding.tvActiveEmpty.visibility = android.view.View.VISIBLE
+                            binding.rvActiveDeliveries.visibility = android.view.View.GONE
+                        } else {
+                            binding.tvActiveEmpty.visibility = android.view.View.GONE
+                            binding.rvActiveDeliveries.visibility = android.view.View.VISIBLE
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            riderViewModel.statusResult.collect { state ->
+                when (state) {
+                    is RiderStatusState.Success -> {
+                        Toast.makeText(this@RiderDashboardActivity, "✅ Status updated to ${state.delivery.status}", Toast.LENGTH_SHORT).show()
+                        riderViewModel.loadDashboardData()
+                        riderViewModel.loadActiveDeliveries()
+                    }
+                    is RiderStatusState.Error -> {
+                        Toast.makeText(this@RiderDashboardActivity, state.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 
     private fun updateUI(stats: RiderModels.EarningsStats, activeDelivery: com.quickparcel.app.shared.models.Delivery?, recentDeliveries: List<com.quickparcel.app.shared.models.Delivery>) {
-        // Load user name
         lifecycleScope.launch {
             var firstName = "Rider"
             try {
@@ -106,9 +195,7 @@ class RiderDashboardActivity : AppCompatActivity() {
                     val user = gson.fromJson(userData, AuthModels.JwtResponse::class.java)
                     firstName = user.firstName
                 }
-            } catch (e: Exception) {
-                // Use default
-            }
+            } catch (e: Exception) {}
             binding.tvWelcome.text = "Welcome back, $firstName!"
         }
 
@@ -117,7 +204,6 @@ class RiderDashboardActivity : AppCompatActivity() {
         binding.tvWeekEarnings.text = "₱${String.format("%.2f", stats.thisWeek)}"
         binding.tvTotalEarnings.text = "₱${String.format("%.2f", stats.total)}"
 
-        // Update active delivery section
         if (activeDelivery != null) {
             binding.cardActiveDelivery.visibility = android.view.View.VISIBLE
             binding.cardNoActive.visibility = android.view.View.GONE
@@ -132,15 +218,8 @@ class RiderDashboardActivity : AppCompatActivity() {
             binding.cardNoActive.visibility = android.view.View.VISIBLE
         }
 
-        // Update recent deliveries
         val recent = recentDeliveries.take(5)
-        deliveryAdapter = DeliveryAdapter(recent) { delivery ->
-            val intent = Intent(this, TrackingActivity::class.java)
-            intent.putExtra("delivery_id", delivery.id)
-            intent.putExtra("tracking_number", delivery.trackingNumber)
-            startActivity(intent)
-        }
-        binding.rvRecentDeliveries.adapter = deliveryAdapter
+        deliveryAdapter.updateDeliveries(recent)
     }
 
     private fun showLoading(show: Boolean) {

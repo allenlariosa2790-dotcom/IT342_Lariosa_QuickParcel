@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../shared/components/Navbar';
 import Sidebar from '../../shared/components/Sidebar';
 import { getDeliveryById, getTrackingHistory, getParcelImage } from '../services/trackingApi';
+import { updateDeliveryStatus } from '../../rider/services/riderApi';
 
 const TrackingPage = () => {
   const { id } = useParams();
@@ -57,22 +58,34 @@ const TrackingPage = () => {
     }
   };
 
+  // Handle status update from rider
+  const handleStatusUpdate = async (newStatus) => {
+    if (!user || user.userType !== 'RIDER') return;
+
+    try {
+      await updateDeliveryStatus(delivery.id, newStatus, 'Current location');
+      alert(`✅ Status updated to ${newStatus}`);
+      // Refresh the page to show updated status
+      fetchDeliveryAndHistory();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      alert('❌ Failed to update status');
+    }
+  };
+
   // Helper function to get short address (first part only)
   const getShortAddress = (address) => {
     if (!address) return null;
-    // Get first part before comma (street/city name)
     const parts = address.split(',');
     return parts[0] || address;
   };
 
   // Get meaningful location text based on status
   const getLocationText = (track, delivery) => {
-    // If a real location is provided, use it
     if (track.location && track.location !== 'Current location') {
       return track.location;
     }
 
-    // Otherwise generate based on status
     switch (track.status) {
       case 'ACCEPTED':
         return 'Delivery accepted by rider';
@@ -282,7 +295,43 @@ const TrackingPage = () => {
               </div>
             </div>
 
-            {/* Tracking history timeline with improved location text */}
+            {/* Rider Status Update Buttons - Only show for riders and active deliveries */}
+            {user?.userType === 'RIDER' && delivery.status !== 'DELIVERED' && delivery.status !== 'CANCELLED' && (
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 className="text-lg font-bold mb-4">Update Delivery Status</h2>
+                <div className="flex flex-wrap gap-3">
+                  {delivery.status === 'ACCEPTED' && (
+                    <button
+                      onClick={() => handleStatusUpdate('PICKED_UP')}
+                      className="flex-1 bg-yellow-500 text-white py-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+                    >
+                      📦 Picked Up
+                    </button>
+                  )}
+                  {delivery.status === 'PICKED_UP' && (
+                    <button
+                      onClick={() => handleStatusUpdate('IN_TRANSIT')}
+                      className="flex-1 bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                    >
+                      🚚 In Transit
+                    </button>
+                  )}
+                  {delivery.status === 'IN_TRANSIT' && (
+                    <button
+                      onClick={() => handleStatusUpdate('DELIVERED')}
+                      className="flex-1 bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                    >
+                      ✅ Delivered
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  Only the next status in the workflow is enabled
+                </p>
+              </div>
+            )}
+
+            {/* Tracking history timeline */}
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <h2 className="text-lg font-bold mb-4">Tracking History</h2>
               {trackingHistory.length === 0 ? (

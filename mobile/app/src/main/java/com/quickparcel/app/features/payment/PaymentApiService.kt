@@ -5,6 +5,10 @@ import retrofit2.http.*
 
 interface PaymentApiService {
 
+    // Change to use tracking endpoint (like webapp)
+    @GET("api/tracking/my")
+    suspend fun getMyDeliveries(): Response<PaymentModels.DeliveriesResponse>
+
     @POST("api/payments/stripe/create-payment-intent")
     suspend fun createStripePaymentIntent(
         @Body request: PaymentModels.CreatePaymentIntentRequest

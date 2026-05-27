@@ -13,6 +13,13 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Define WeeklyEarning data class locally
+data class WeeklyEarning(
+    val day: String,
+    val earnings: Double,
+    val deliveries: Int
+)
+
 class EarningsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEarningsBinding
@@ -23,7 +30,7 @@ class EarningsActivity : AppCompatActivity() {
 
     private var filter = "all" // all, thisWeek, thisMonth
     private var allDeliveries: List<com.quickparcel.app.shared.models.Delivery> = emptyList()
-    private val weeklyData = mutableListOf<RiderModels.WeeklyEarning>()
+    private val weeklyData = mutableListOf<WeeklyEarning>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +81,6 @@ class EarningsActivity : AppCompatActivity() {
         binding.btnFilterWeek.isSelected = filter == "thisWeek"
         binding.btnFilterMonth.isSelected = filter == "thisMonth"
 
-        val bgRes = R.drawable.bg_status_accepted
         binding.btnFilterAll.backgroundTintList = if (filter == "all") {
             androidx.core.content.ContextCompat.getColorStateList(this, R.color.quickparcel_blue)
         } else {
@@ -132,8 +138,8 @@ class EarningsActivity : AppCompatActivity() {
         today.set(Calendar.SECOND, 0)
         today.set(Calendar.MILLISECOND, 0)
 
-        val todayEarnings = completed.filter {
-            val date = parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
+        val todayEarnings = completed.filter { delivery ->
+            val date = parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
             date != null && date >= today.time
         }.sumOf { it.estimatedCost }
 
@@ -143,8 +149,8 @@ class EarningsActivity : AppCompatActivity() {
         val weekAgo = Calendar.getInstance()
         weekAgo.add(Calendar.DAY_OF_YEAR, -7)
 
-        val weekEarnings = completed.filter {
-            val date = parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
+        val weekEarnings = completed.filter { delivery ->
+            val date = parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
             date != null && date >= weekAgo.time
         }.sumOf { it.estimatedCost }
 
@@ -154,8 +160,8 @@ class EarningsActivity : AppCompatActivity() {
         val twoWeeksAgo = Calendar.getInstance()
         twoWeeksAgo.add(Calendar.DAY_OF_YEAR, -14)
 
-        val lastWeekEarnings = completed.filter {
-            val date = parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
+        val lastWeekEarnings = completed.filter { delivery ->
+            val date = parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
             date != null && date >= twoWeeksAgo.time && date < weekAgo.time
         }.sumOf { it.estimatedCost }
 
@@ -163,8 +169,6 @@ class EarningsActivity : AppCompatActivity() {
 
         // Prepare weekly chart data (last 7 days)
         weeklyData.clear()
-        val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         for (i in 6 downTo 0) {
             val date = Calendar.getInstance()
@@ -177,13 +181,13 @@ class EarningsActivity : AppCompatActivity() {
             nextDay.time = date.time
             nextDay.add(Calendar.DAY_OF_YEAR, 1)
 
-            val dayEarnings = completed.filter {
-                val deliveryDate = parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
+            val dayEarnings = completed.filter { delivery ->
+                val deliveryDate = parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
                 deliveryDate != null && deliveryDate >= date.time && deliveryDate < nextDay.time
             }.sumOf { it.estimatedCost }
 
-            val dayDeliveries = completed.count {
-                val deliveryDate = parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
+            val dayDeliveries = completed.count { delivery ->
+                val deliveryDate = parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
                 deliveryDate != null && deliveryDate >= date.time && deliveryDate < nextDay.time
             }
 
@@ -198,7 +202,7 @@ class EarningsActivity : AppCompatActivity() {
                 else -> "Mon"
             }
 
-            weeklyData.add(RiderModels.WeeklyEarning(dayName, dayEarnings, dayDeliveries))
+            weeklyData.add(WeeklyEarning(dayName, dayEarnings, dayDeliveries))
         }
 
         drawChart()
@@ -209,72 +213,37 @@ class EarningsActivity : AppCompatActivity() {
 
     private fun drawChart() {
         val maxEarnings = weeklyData.maxOfOrNull { it.earnings } ?: 100.0
-        val chartHeight = 150 // dp equivalent in pixels will be handled in code
 
-        // Find bar containers
-        val barContainers = listOf(
-            binding.barContainer1, binding.barContainer2, binding.barContainer3,
-            binding.barContainer4, binding.barContainer5, binding.barContainer6, binding.barContainer7
+        val bars = listOf(
+            binding.bar1 to binding.barValue1 to binding.barDeliveries1,
+            binding.bar2 to binding.barValue2 to binding.barDeliveries2,
+            binding.bar3 to binding.barValue3 to binding.barDeliveries3,
+            binding.bar4 to binding.barValue4 to binding.barDeliveries4,
+            binding.bar5 to binding.barValue5 to binding.barDeliveries5,
+            binding.bar6 to binding.barValue6 to binding.barDeliveries6,
+            binding.bar7 to binding.barValue7 to binding.barDeliveries7
+        )
+        val days = listOf(
+            binding.barDay1, binding.barDay2, binding.barDay3, binding.barDay4,
+            binding.barDay5, binding.barDay6, binding.barDay7
         )
 
         weeklyData.forEachIndexed { index, data ->
-            if (index < barContainers.size) {
-                val container = barContainers[index]
-                val bar = when (index) {
-                    0 -> binding.bar1
-                    1 -> binding.bar2
-                    2 -> binding.bar3
-                    3 -> binding.bar4
-                    4 -> binding.bar5
-                    5 -> binding.bar6
-                    6 -> binding.bar7
-                    else -> null
-                }
+            if (index < bars.size) {
+                val (barWithValue, deliveriesText) = bars[index]
+                val (bar, valueText) = barWithValue
+                val dayText = days[index]
 
-                val valueText = when (index) {
-                    0 -> binding.barValue1
-                    1 -> binding.barValue2
-                    2 -> binding.barValue3
-                    3 -> binding.barValue4
-                    4 -> binding.barValue5
-                    5 -> binding.barValue6
-                    6 -> binding.barValue7
-                    else -> null
-                }
-
-                val dayText = when (index) {
-                    0 -> binding.barDay1
-                    1 -> binding.barDay2
-                    2 -> binding.barDay3
-                    3 -> binding.barDay4
-                    4 -> binding.barDay5
-                    5 -> binding.barDay6
-                    6 -> binding.barDay7
-                    else -> null
-                }
-
-                val deliveriesText = when (index) {
-                    0 -> binding.barDeliveries1
-                    1 -> binding.barDeliveries2
-                    2 -> binding.barDeliveries3
-                    3 -> binding.barDeliveries4
-                    4 -> binding.barDeliveries5
-                    5 -> binding.barDeliveries6
-                    6 -> binding.barDeliveries7
-                    else -> null
-                }
-
-                // Set height (max 120dp)
                 val height = if (maxEarnings > 0) (data.earnings / maxEarnings * 120).toInt() else 0
                 val heightPx = (height * resources.displayMetrics.density).toInt()
 
-                bar?.layoutParams?.height = if (heightPx > 0) heightPx else 4
-                bar?.requestLayout()
+                bar.layoutParams?.height = if (heightPx > 0) heightPx else 4
+                bar.requestLayout()
 
-                valueText?.text = if (data.earnings > 0) "₱${String.format("%.0f", data.earnings)}" else ""
-                dayText?.text = data.day
-                deliveriesText?.text = if (data.deliveries > 0) "${data.deliveries} del" else ""
-                deliveriesText?.visibility = if (data.deliveries > 0) android.view.View.VISIBLE else android.view.View.GONE
+                valueText.text = if (data.earnings > 0) "₱${String.format("%.0f", data.earnings)}" else ""
+                dayText.text = data.day
+                deliveriesText.text = if (data.deliveries > 0) "${data.deliveries} del" else ""
+                deliveriesText.visibility = if (data.deliveries > 0) android.view.View.VISIBLE else android.view.View.GONE
             }
         }
 
@@ -285,30 +254,31 @@ class EarningsActivity : AppCompatActivity() {
     }
 
     private fun filterTransactions() {
-        val now = Calendar.getInstance()
         val filtered = when (filter) {
             "thisWeek" -> {
                 val weekAgo = Calendar.getInstance()
                 weekAgo.add(Calendar.DAY_OF_YEAR, -7)
-                allDeliveries.filter {
-                    val date = parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
+                allDeliveries.filter { delivery ->
+                    val date = parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
                     date != null && date >= weekAgo.time
                 }
             }
             "thisMonth" -> {
                 val monthAgo = Calendar.getInstance()
                 monthAgo.add(Calendar.DAY_OF_YEAR, -30)
-                allDeliveries.filter {
-                    val date = parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
+                allDeliveries.filter { delivery ->
+                    val date = parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
                     date != null && date >= monthAgo.time
                 }
             }
             else -> allDeliveries
         }
 
-        earningsAdapter.updateTransactions(filtered.sortedByDescending {
-            parseDate(it.deliveredTime ?: it.updatedAt ?: it.createdAt)
-        })
+        val sorted = filtered.sortedByDescending { delivery ->
+            parseDate(delivery.deliveredTime ?: delivery.updatedAt ?: delivery.createdAt)
+        }
+
+        earningsAdapter.updateTransactions(sorted)
 
         if (filtered.isEmpty()) {
             binding.tvEmpty.visibility = android.view.View.VISIBLE

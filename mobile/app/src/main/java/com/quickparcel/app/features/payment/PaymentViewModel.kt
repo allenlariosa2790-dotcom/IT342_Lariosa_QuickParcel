@@ -2,6 +2,7 @@ package com.quickparcel.app.features.payment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.quickparcel.app.shared.models.Delivery
 import com.quickparcel.app.shared.network.RetrofitClient
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,6 +14,9 @@ class PaymentViewModel(
 
     private val repository = PaymentRepository(retrofitClient)
 
+    private val _paymentsResult = MutableSharedFlow<PaymentsState>()
+    val paymentsResult = _paymentsResult.asSharedFlow()
+
     private val _paymentIntentResult = MutableSharedFlow<PaymentIntentState>()
     val paymentIntentResult = _paymentIntentResult.asSharedFlow()
 
@@ -21,6 +25,21 @@ class PaymentViewModel(
 
     private val _markPaidResult = MutableSharedFlow<MarkPaidState>()
     val markPaidResult = _markPaidResult.asSharedFlow()
+
+    fun loadPayments() {
+        viewModelScope.launch {
+            _paymentsResult.emit(PaymentsState.Loading)
+            val result = repository.getMyPayments()
+            when (result) {
+                is PaymentModels.PaymentsResult.Success -> {
+                    _paymentsResult.emit(PaymentsState.Success(result.deliveries, result.stats))
+                }
+                is PaymentModels.PaymentsResult.Error -> {
+                    _paymentsResult.emit(PaymentsState.Error(result.message))
+                }
+            }
+        }
+    }
 
     fun createPaymentIntent(deliveryId: Int, amount: Double, description: String) {
         viewModelScope.launch {
@@ -66,6 +85,12 @@ class PaymentViewModel(
             }
         }
     }
+}
+
+sealed class PaymentsState {
+    object Loading : PaymentsState()
+    data class Success(val deliveries: List<Delivery>, val stats: PaymentModels.PaymentStats) : PaymentsState()
+    data class Error(val message: String) : PaymentsState()
 }
 
 sealed class PaymentIntentState {

@@ -12,11 +12,9 @@ import kotlinx.coroutines.runBlocking
 
 class RetrofitClient(private val tokenManager: TokenManager) {
 
-    // Use runBlocking for the interceptor since it runs on a background thread
     private val authInterceptor = Interceptor { chain ->
         var request = chain.request()
 
-        // Interceptor runs on background thread - runBlocking is acceptable here
         val token = runBlocking { tokenManager.getToken() }
         if (!token.isNullOrEmpty()) {
             request = request.newBuilder()

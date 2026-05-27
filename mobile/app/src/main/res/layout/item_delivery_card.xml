@@ -88,5 +88,49 @@
                 android:textSize="10sp"
                 android:textColor="@color/quickparcel_gray" />
         </LinearLayout>
+
+        <!-- Status Update Buttons Container (Only visible for Riders) -->
+        <LinearLayout
+            android:id="@+id/status_buttons_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/btn_picked_up"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="📦 Picked Up"
+                android:textSize="10sp"
+                style="@style/Widget.MaterialComponents.Button"
+                android:backgroundTint="@color/quickparcel_yellow" />
+
+            <Button
+                android:id="@+id/btn_in_transit"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:text="🚚 In Transit"
+                android:textSize="10sp"
+                style="@style/Widget.MaterialComponents.Button"
+                android:backgroundTint="@color/quickparcel_blue" />
+
+            <Button
+                android:id="@+id/btn_delivered"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="✅ Delivered"
+                android:textSize="10sp"
+                style="@style/Widget.MaterialComponents.Button"
+                android:backgroundTint="@color/quickparcel_green" />
+        </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

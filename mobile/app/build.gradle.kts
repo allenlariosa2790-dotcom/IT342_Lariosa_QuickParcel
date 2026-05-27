@@ -76,7 +76,7 @@ dependencies {
     // SwipeRefreshLayout
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
-    // OpenStreetMap (osmdroid) - simplified to avoid conflicts
+    // OpenStreetMap (osmdroid)
     implementation("org.osmdroid:osmdroid-android:6.1.17")
 
     // Image loading

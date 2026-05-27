@@ -91,9 +91,14 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        deliveryAdapter = DeliveryAdapter(emptyList()) { delivery ->
-            showDeliveryDetailsDialog(delivery)
-        }
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = emptyList(),
+            onItemClick = { delivery ->
+                showDeliveryDetailsDialog(delivery)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
         binding.rvDeliveries.layoutManager = LinearLayoutManager(this)
         binding.rvDeliveries.adapter = deliveryAdapter
     }
@@ -123,7 +128,6 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        // Stats observer
         lifecycleScope.launch {
             adminViewModel.statsResult.collect { state ->
                 when (state) {
@@ -142,7 +146,6 @@ class AdminDashboardActivity : AppCompatActivity() {
             }
         }
 
-        // Users observer
         lifecycleScope.launch {
             adminViewModel.usersResult.collect { state ->
                 when (state) {
@@ -161,7 +164,6 @@ class AdminDashboardActivity : AppCompatActivity() {
             }
         }
 
-        // Deliveries observer
         lifecycleScope.launch {
             adminViewModel.deliveriesResult.collect { state ->
                 when (state) {
@@ -180,7 +182,6 @@ class AdminDashboardActivity : AppCompatActivity() {
             }
         }
 
-        // User status update observer
         lifecycleScope.launch {
             adminViewModel.userStatusResult.collect { state ->
                 when (state) {
@@ -197,7 +198,6 @@ class AdminDashboardActivity : AppCompatActivity() {
             }
         }
 
-        // Cancel delivery observer
         lifecycleScope.launch {
             adminViewModel.cancelDeliveryResult.collect { state ->
                 when (state) {
@@ -242,9 +242,14 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun updateDeliveriesUI(deliveries: List<com.quickparcel.app.shared.models.Delivery>) {
-        deliveryAdapter = DeliveryAdapter(deliveries) { delivery ->
-            showDeliveryDetailsDialog(delivery)
-        }
+        deliveryAdapter = DeliveryAdapter(
+            deliveries = deliveries,
+            onItemClick = { delivery ->
+                showDeliveryDetailsDialog(delivery)
+            },
+            isRiderMode = false,
+            onStatusUpdate = null
+        )
         binding.rvDeliveries.adapter = deliveryAdapter
     }
 

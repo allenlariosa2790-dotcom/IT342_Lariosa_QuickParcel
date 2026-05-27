@@ -99,11 +99,32 @@ public class DeliveryController {
             return ResponseEntity.badRequest().body(Map.of("error", "Missing addresses"));
         }
 
+        System.out.println("\n========================================");
+        System.out.println("DISTANCE CALCULATION REQUEST");
+        System.out.println("Origin: " + origin);
+        System.out.println("Destination: " + destination);
+        System.out.println("Weight: " + weight + " kg");
+        System.out.println("========================================");
+
         double distanceKm = distanceService.calculateDistanceInKm(origin, destination);
+
+        // Cost calculation formula
         double baseFare = 50.0;
         double perKmRate = 20.0;
-        double weightSurcharge = Math.max(0, (weight - 2) * 10);
+        double weightSurcharge = Math.max(0, (weight - 0.5) * 10);
+
         double estimatedCost = baseFare + (distanceKm * perKmRate) + weightSurcharge;
+
+        // Round to nearest PHP
+        estimatedCost = Math.round(estimatedCost);
+
+        System.out.println("Calculated distance: " + distanceKm + " km");
+        System.out.println("Base fare: ₱" + baseFare);
+        System.out.println("Per km rate: ₱" + perKmRate);
+        System.out.println("Distance charge: ₱" + (distanceKm * perKmRate));
+        System.out.println("Weight surcharge: ₱" + weightSurcharge);
+        System.out.println("Total estimated cost: ₱" + estimatedCost);
+        System.out.println("========================================\n");
 
         return ResponseEntity.ok(Map.of(
                 "distance", distanceKm,

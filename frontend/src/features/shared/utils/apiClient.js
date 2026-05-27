@@ -14,7 +14,8 @@ const publicEndpoints = [
   '/auth/register',
   '/auth/login',
   '/test',
-  '/deliveries/calculate-distance'
+  '/deliveries/calculate-distance',  // Make sure this is here
+  '/files/'
 ];
 
 apiClient.interceptors.request.use(

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/swipe_refresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/quickparcel_gray_light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/btn_back"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_revert"
+                android:contentDescription="Back" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Delivery Management"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tv_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 deliveries"
+                android:textSize="12sp"
+                android:textColor="@color/quickparcel_gray" />
+        </LinearLayout>
+
+        <!-- Filter Row -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btn_filter_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="All"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="16dp"
+                    android:gravity="center"
+                    android:textColor="@color/quickparcel_blue"
+                    android:background="@drawable/bg_filter_selected" />
+
+                <TextView
+                    android:id="@+id/btn_filter_pending"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="Pending"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:textColor="@color/quickparcel_gray"
+                    android:background="@drawable/bg_filter_default" />
+
+                <TextView
+                    android:id="@+id/btn_filter_transit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="In Transit"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:textColor="@color/quickparcel_gray"
+                    android:background="@drawable/bg_filter_default" />
+
+                <TextView
+                    android:id="@+id/btn_filter_delivered"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="Delivered"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:textColor="@color/quickparcel_gray"
+                    android:background="@drawable/bg_filter_default" />
+
+                <TextView
+                    android:id="@+id/btn_filter_cancelled"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="Cancelled"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:textColor="@color/quickparcel_gray"
+                    android:background="@drawable/bg_filter_default" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- Deliveries List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_deliveries"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:paddingTop="0dp"
+            android:clipToPadding="false" />
+
+        <!-- Empty State -->
+        <TextView
+            android:id="@+id/tv_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="No deliveries found"
+            android:gravity="center"
+            android:padding="32dp"
+            android:textSize="14sp"
+            android:textColor="@color/quickparcel_gray"
+            android:visibility="gone" />
+
+        <!-- Loading Progress -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

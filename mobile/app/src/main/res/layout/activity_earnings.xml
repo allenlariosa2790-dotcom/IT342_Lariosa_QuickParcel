@@ -1,0 +1,697 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/swipe_refresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/quickparcel_gray_light">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:id="@+id/btn_back"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/ic_menu_revert"
+                    android:contentDescription="Back" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Earnings"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- Summary Cards -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tv_total_earnings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="₱0"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/quickparcel_blue" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Total Earned"
+                            android:textSize="11sp"
+                            android:textColor="@color/quickparcel_gray" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tv_completed_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/quickparcel_green" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Deliveries"
+                            android:textSize="11sp"
+                            android:textColor="@color/quickparcel_gray" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tv_average_earnings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="₱0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/quickparcel_blue" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Avg/Delivery"
+                            android:textSize="11sp"
+                            android:textColor="@color/quickparcel_gray" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Earnings Breakdown -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Earnings Breakdown"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Today"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tv_today_earnings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="₱0"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/quickparcel_blue" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="This Week"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tv_week_earnings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="₱0"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/quickparcel_green" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Last Week"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tv_last_week_earnings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="₱0"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/quickparcel_gray" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Weekly Chart -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/chart_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Weekly Earnings"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Chart Bars Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="140dp"
+                        android:orientation="horizontal"
+                        android:gravity="bottom">
+
+                        <!-- Day 1 -->
+                        <LinearLayout
+                            android:id="@+id/bar_container_1"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="bottom"
+                            android:layout_marginEnd="4dp">
+
+                            <TextView
+                                android:id="@+id/bar_value_1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="9sp"
+                                android:textColor="@color/quickparcel_blue"
+                                android:gravity="center" />
+
+                            <View
+                                android:id="@+id/bar_1"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:background="@color/quickparcel_blue" />
+
+                            <TextView
+                                android:id="@+id/bar_day_1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Mon"
+                                android:textSize="10sp"
+                                android:textColor="@color/quickparcel_gray"
+                                android:gravity="center"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:id="@+id/bar_deliveries_1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="8sp"
+                                android:textColor="@color/quickparcel_green"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <!-- Day 2 -->
+                        <LinearLayout
+                            android:id="@+id/bar_container_2"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="bottom"
+                            android:layout_marginEnd="4dp">
+
+                            <TextView
+                                android:id="@+id/bar_value_2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="9sp"
+                                android:textColor="@color/quickparcel_blue"
+                                android:gravity="center" />
+
+                            <View
+                                android:id="@+id/bar_2"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:background="@color/quickparcel_blue" />
+
+                            <TextView
+                                android:id="@+id/bar_day_2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Tue"
+                                android:textSize="10sp"
+                                android:textColor="@color/quickparcel_gray"
+                                android:gravity="center"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:id="@+id/bar_deliveries_2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="8sp"
+                                android:textColor="@color/quickparcel_green"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <!-- Day 3 -->
+                        <LinearLayout
+                            android:id="@+id/bar_container_3"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="bottom"
+                            android:layout_marginEnd="4dp">
+
+                            <TextView
+                                android:id="@+id/bar_value_3"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="9sp"
+                                android:textColor="@color/quickparcel_blue"
+                                android:gravity="center" />
+
+                            <View
+                                android:id="@+id/bar_3"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:background="@color/quickparcel_blue" />
+
+                            <TextView
+                                android:id="@+id/bar_day_3"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Wed"
+                                android:textSize="10sp"
+                                android:textColor="@color/quickparcel_gray"
+                                android:gravity="center"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:id="@+id/bar_deliveries_3"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="8sp"
+                                android:textColor="@color/quickparcel_green"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <!-- Day 4 -->
+                        <LinearLayout
+                            android:id="@+id/bar_container_4"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="bottom"
+                            android:layout_marginEnd="4dp">
+
+                            <TextView
+                                android:id="@+id/bar_value_4"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="9sp"
+                                android:textColor="@color/quickparcel_blue"
+                                android:gravity="center" />
+
+                            <View
+                                android:id="@+id/bar_4"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:background="@color/quickparcel_blue" />
+
+                            <TextView
+                                android:id="@+id/bar_day_4"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Thu"
+                                android:textSize="10sp"
+                                android:textColor="@color/quickparcel_gray"
+                                android:gravity="center"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:id="@+id/bar_deliveries_4"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="8sp"
+                                android:textColor="@color/quickparcel_green"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <!-- Day 5 -->
+                        <LinearLayout
+                            android:id="@+id/bar_container_5"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="bottom"
+                            android:layout_marginEnd="4dp">
+
+                            <TextView
+                                android:id="@+id/bar_value_5"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="9sp"
+                                android:textColor="@color/quickparcel_blue"
+                                android:gravity="center" />
+
+                            <View
+                                android:id="@+id/bar_5"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:background="@color/quickparcel_blue" />
+
+                            <TextView
+                                android:id="@+id/bar_day_5"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Fri"
+                                android:textSize="10sp"
+                                android:textColor="@color/quickparcel_gray"
+                                android:gravity="center"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:id="@+id/bar_deliveries_5"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="8sp"
+                                android:textColor="@color/quickparcel_green"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <!-- Day 6 -->
+                        <LinearLayout
+                            android:id="@+id/bar_container_6"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="bottom"
+                            android:layout_marginEnd="4dp">
+
+                            <TextView
+                                android:id="@+id/bar_value_6"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="9sp"
+                                android:textColor="@color/quickparcel_blue"
+                                android:gravity="center" />
+
+                            <View
+                                android:id="@+id/bar_6"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:background="@color/quickparcel_blue" />
+
+                            <TextView
+                                android:id="@+id/bar_day_6"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Sat"
+                                android:textSize="10sp"
+                                android:textColor="@color/quickparcel_gray"
+                                android:gravity="center"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:id="@+id/bar_deliveries_6"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="8sp"
+                                android:textColor="@color/quickparcel_green"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <!-- Day 7 -->
+                        <LinearLayout
+                            android:id="@+id/bar_container_7"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="bottom">
+
+                            <TextView
+                                android:id="@+id/bar_value_7"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="9sp"
+                                android:textColor="@color/quickparcel_blue"
+                                android:gravity="center" />
+
+                            <View
+                                android:id="@+id/bar_7"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:background="@color/quickparcel_blue" />
+
+                            <TextView
+                                android:id="@+id/bar_day_7"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Sun"
+                                android:textSize="10sp"
+                                android:textColor="@color/quickparcel_gray"
+                                android:gravity="center"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:id="@+id/bar_deliveries_7"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="8sp"
+                                android:textColor="@color/quickparcel_green"
+                                android:gravity="center" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- No Chart Data Message -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/tv_no_chart_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No earnings data available yet.\nComplete deliveries to see your chart!"
+                    android:gravity="center"
+                    android:padding="24dp"
+                    android:textSize="13sp"
+                    android:textColor="@color/quickparcel_gray" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Transaction History Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Transaction History"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <!-- Filter Buttons -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_filter_all"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:text="All"
+                        android:textSize="11sp"
+                        app:cornerRadius="6dp"
+                        android:paddingHorizontal="10dp"
+                        android:backgroundTint="@color/quickparcel_blue" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_filter_week"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:text="Week"
+                        android:textSize="11sp"
+                        app:cornerRadius="6dp"
+                        android:layout_marginStart="4dp"
+                        android:paddingHorizontal="10dp"
+                        android:backgroundTint="@color/quickparcel_gray" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_filter_month"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:text="Month"
+                        android:textSize="11sp"
+                        app:cornerRadius="6dp"
+                        android:layout_marginStart="4dp"
+                        android:paddingHorizontal="10dp"
+                        android:backgroundTint="@color/quickparcel_gray" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Transactions List -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_transactions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+            <!-- Empty State -->
+            <TextView
+                android:id="@+id/tv_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No transactions found"
+                android:gravity="center"
+                android:padding="32dp"
+                android:textSize="14sp"
+                android:textColor="@color/quickparcel_gray"
+                android:visibility="gone" />
+
+            <!-- Loading Progress -->
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="24dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

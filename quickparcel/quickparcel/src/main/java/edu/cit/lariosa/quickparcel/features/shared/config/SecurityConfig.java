@@ -3,7 +3,6 @@ package edu.cit.lariosa.quickparcel.features.shared.config;
 import edu.cit.lariosa.quickparcel.features.auth.AuthTokenFilter;
 import edu.cit.lariosa.quickparcel.features.auth.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,9 +28,6 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -52,10 +48,11 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
-                "http://10.0.2.2",
+                "http://127.0.0.1:3000",
                 "http://10.0.2.2:8080",
-                "http://127.0.0.1:8080",
-                "http://localhost:8080"
+                "http://localhost:8080",
+                "http://192.168.1.100:8080",  // Add your computer's IP
+                "http://192.168.1.2:8080"      // Add any other IPs you use
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
@@ -76,9 +73,11 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints - no authentication required
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/api/files/**").permitAll()  // Allow public access to files
+                        .requestMatchers("/api/files/**").permitAll()
+                        .requestMatchers("/api/deliveries/calculate-distance").permitAll()  // ADD THIS LINE
                         .anyRequest().authenticated());
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

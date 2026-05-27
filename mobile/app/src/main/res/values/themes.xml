@@ -1,9 +1,34 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.QuickParcel" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.QuickParcel" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/quickparcel_blue</item>
+
+        <!-- Window background -->
+        <item name="android:windowBackground">@color/quickparcel_gray_light</item>
+
+        <!-- Material Design colors -->
+        <item name="colorPrimary">@color/quickparcel_blue</item>
+        <item name="colorPrimaryDark">@color/quickparcel_blue_dark</item>
+        <item name="colorPrimaryVariant">@color/quickparcel_blue_dark</item>
+        <item name="colorSecondary">@color/quickparcel_green</item>
+        <item name="colorSecondaryVariant">@color/quickparcel_green_dark</item>
+        <item name="colorAccent">@color/quickparcel_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSurface">@color/quickparcel_gray_dark</item>
+
+        <!-- Card view style -->
+        <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+
+        <!-- Button style -->
+        <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
     </style>
 
-    <style name="Theme.QuickParcel" parent="Base.Theme.QuickParcel" />
+    <!-- Custom button style matching webapp -->
+    <style name="QuickParcelButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">14sp</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
 </resources>

@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- QuickParcel Brand Colors (matching web app) -->
+    <color name="quickparcel_blue">#2563EB</color>
+    <color name="quickparcel_blue_light">#3B82F6</color>
+    <color name="quickparcel_blue_dark">#1D4ED8</color>
+    <color name="quickparcel_green">#10B981</color>
+    <color name="quickparcel_green_dark">#059669</color>
+    <color name="quickparcel_red">#EF4444</color>
+    <color name="quickparcel_yellow">#F59E0B</color>
+    <color name="quickparcel_gray">#6B7280</color>
+    <color name="quickparcel_gray_light">#F3F4F6</color>
+    <color name="quickparcel_gray_dark">#374151</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
 </resources>

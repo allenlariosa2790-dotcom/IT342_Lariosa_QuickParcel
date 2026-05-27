@@ -1,3 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">QuickParcel</string>
+
+    <!-- Auth Strings -->
+    <string name="login_title">Welcome Back</string>
+    <string name="register_title">Create Account</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="phone">Phone Number</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="logout">Logout</string>
+    <string name="sender">Sender</string>
+    <string name="rider">Rider</string>
+    <string name="admin">Admin</string>
+
+    <!-- Delivery Strings -->
+    <string name="create_delivery">Create Delivery</string>
+    <string name="pickup_address">Pickup Address</string>
+    <string name="dropoff_address">Dropoff Address</string>
+    <string name="parcel_name">Parcel Name</string>
+    <string name="parcel_description">Description (optional)</string>
+    <string name="weight_kg">Weight (kg)</string>
+    <string name="size">Size</string>
+    <string name="category">Category</string>
+    <string name="fragile">Fragile - Handle with care</string>
+    <string name="scheduled_time">Scheduled Time (optional)</string>
+    <string name="notes_for_rider">Notes for Rider (optional)</string>
+
+    <!-- Payment Strings -->
+    <string name="cash_on_delivery">Cash on Delivery</string>
+    <string name="credit_card">Credit/Debit Card</string>
+    <string name="gcash">GCash (Coming Soon)</string>
+
+    <!-- Common Strings -->
+    <string name="next">Next →</string>
+    <string name="back">← Back</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="loading">Loading...</string>
+    <string name="retry">Retry</string>
+    <string name="no_data">No data available</string>
+
+    <!-- Error Messages -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_server">Server error. Please try again later.</string>
+    <string name="error_unauthorized">Session expired. Please login again.</string>
+    <string name="error_invalid_input">Please check your input and try again.</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_password_too_short">Password must be at least 6 characters</string>
+    <string name="error_required_field">This field is required</string>
+
+    <!-- Success Messages -->
+    <string name="success_login">Login successful!</string>
+    <string name="success_register">Registration successful!</string>
+    <string name="success_delivery_created">Delivery created successfully!</string>
 </resources>
